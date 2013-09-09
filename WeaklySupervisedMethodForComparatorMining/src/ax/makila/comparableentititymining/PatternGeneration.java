@@ -9,12 +9,11 @@ import java.util.Map;
 import java.util.Set;
 
 import ax.makila.comparableentititymining.postagger.StanfordPosTagger;
-import ax.makila.comparableentititymining.sequentialpatterns.Sequence;
-import ax.makila.comparableentititymining.sequentialpatterns.SequentialPattern;
 import ax.makila.comparableentititymining.sequentialpatterns.patterns.GeneralizedSequence;
 import ax.makila.comparableentititymining.sequentialpatterns.patterns.LexicalSequence;
 import ax.makila.comparableentititymining.sequentialpatterns.patterns.Pattern;
 
+import com.abahgat.suffixtree.GeneralizedSuffixTree;
 import com.strongczq.SuffixTree;
 
 @SuppressWarnings("unused")
@@ -210,5 +209,7 @@ public class PatternGeneration {
 		}
 		return replaced;
 	}
+	
+	
 
 }
