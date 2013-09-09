@@ -1,6 +1,6 @@
-package makila.comparableentititymining.sequentialpatterns.patterns;
+package ax.makila.comparableentititymining.sequentialpatterns.patterns;
 
-import makila.comparableentititymining.sequentialpatterns.Sequence;
+import ax.makila.comparableentititymining.sequentialpatterns.Sequence;
 
 public class LexicalSequence extends Sequence implements Pattern {
 	public LexicalSequence(String seq) {

@@ -1,9 +1,9 @@
-package makila.comparableentititymining.sequentialpatterns;
+package ax.makila.comparableentititymining.sequentialpatterns;
 
 public class Sequence implements SequentialPattern {
-	
+
 	public String sequence = null;
-	
+
 	public Sequence(String seq) {
 		sequence = seq;
 	}
@@ -32,17 +32,5 @@ public class Sequence implements SequentialPattern {
 	public boolean isSpecialized() {
 		return false;
 	}
-
-	
-
-	
-
-	
-
-
-
-
-
-
 
 }

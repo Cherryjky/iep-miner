@@ -8,7 +8,7 @@ import java.util.TreeMap;
 
 /**
  * Ukkonen's linear construction of suffix tree
- *
+ * 
  * @author strongczq https://gist.github.com/strongczq/3398723
  */
 public class SuffixTree {
@@ -31,7 +31,8 @@ public class SuffixTree {
 
 		public char getAt(int i) {
 			if (i < 0 || i >= end - start + 1) {
-				throw new IndexOutOfBoundsException("i = " + i + ", while length = " + length());
+				throw new IndexOutOfBoundsException("i = " + i
+						+ ", while length = " + length());
 			}
 			return text[start + i];
 		}
@@ -102,7 +103,7 @@ public class SuffixTree {
 		}
 	}
 
-	//describe a position in the tree.
+	// describe a position in the tree.
 	private class Position {
 		InternalNode node = null;
 		char edgeFirstChar = (char) -1;
@@ -122,13 +123,13 @@ public class SuffixTree {
 			return node;
 		}
 
-		//walk down stepNum steps
+		// walk down stepNum steps
 		public void walkDownWithOutCompare(int phase, int stepNum) {
 			int count = 0;
 			while (count < stepNum) {
 				int pos = phase - 1 - stepNum + count;
 				Edge e = node.getEdge(text[pos + 1]);
-				//skip this edge
+				// skip this edge
 				if (e.length() <= stepNum - count) {
 					node = (InternalNode) e.getNextNode();
 					count += e.length();
@@ -140,7 +141,7 @@ public class SuffixTree {
 			}
 		}
 
-		//walk down one character along the tree according to the given ch
+		// walk down one character along the tree according to the given ch
 		public void walkDownOneStep(char ch) {
 			if (isInternalNode()) {
 				edgeFirstChar = ch;
@@ -157,8 +158,8 @@ public class SuffixTree {
 			}
 		}
 
-		//return true if there is a successive position
-		//according the the given character
+		// return true if there is a successive position
+		// according the the given character
 		public boolean checkNext(char ch) {
 			if (isInternalNode()) {
 				return node.getEdge(ch) != null;
@@ -168,24 +169,27 @@ public class SuffixTree {
 
 		}
 
-		//split on this current position and traverse the suffix link to the next
-		//node
+		// split on this current position and traverse the suffix link to the
+		// next
+		// node
 		public void split(int phase, int extension) {
 			if (isInternalNode()) {
 				LeafNode lNode = new LeafNode(extension);
-				node.setEdge(text[phase], new Edge(phase, text.length - 1, lNode));
+				node.setEdge(text[phase], new Edge(phase, text.length - 1,
+						lNode));
 				node = node.getSuffix();
-				//suffix of root is null
+				// suffix of root is null
 				if (node == null) {
 					node = root;
 				}
 			} else {
 				Edge cEdge = node.getEdge(edgeFirstChar);
 				InternalNode iNode = new InternalNode();
-				Edge e1 = new Edge(cEdge.getStart() + edgeIndex + 1, cEdge.getEnd(),
-						cEdge.getNextNode());
+				Edge e1 = new Edge(cEdge.getStart() + edgeIndex + 1,
+						cEdge.getEnd(), cEdge.getNextNode());
 				iNode.setEdge(text[cEdge.getStart() + edgeIndex + 1], e1);
-				Edge e2 = new Edge(phase, text.length - 1, new LeafNode(extension));
+				Edge e2 = new Edge(phase, text.length - 1, new LeafNode(
+						extension));
 				iNode.setEdge(text[phase], e2);
 				cEdge.setEnd(cEdge.getStart() + edgeIndex);
 				cEdge.setNextNode(iNode);
@@ -200,7 +204,7 @@ public class SuffixTree {
 				node = node.getSuffix();
 				edgeFirstChar = (char) -1;
 				edgeIndex = 0;
-				if (node == null) {//suffix of root is null
+				if (node == null) {// suffix of root is null
 					node = root;
 					gamma--;
 				}
@@ -210,12 +214,12 @@ public class SuffixTree {
 	}
 
 	InternalNode root = null;
-	//last created internal node, for preparing suffix link
+	// last created internal node, for preparing suffix link
 	InternalNode lastCreate = null;
-	//current position.
+	// current position.
 	Position current = null;
-	//the length to walk down without comparing every single
-	//character of the text and edge label.
+	// the length to walk down without comparing every single
+	// character of the text and edge label.
 	int gamma = 0;
 	char[] text = null;
 
@@ -236,7 +240,7 @@ public class SuffixTree {
 
 	/**
 	 * build a suffix tree with default appended character '$'
-	 *
+	 * 
 	 * @param input
 	 */
 	public void build(char[] input) {
@@ -245,122 +249,125 @@ public class SuffixTree {
 		this.text = new char[input.length + 1];
 		System.arraycopy(input, 0, this.text, 0, input.length);
 		this.text[this.text.length - 1] = append;
-		int lastExtension = -1; //last Rule 1/2 extension
-		for (int phase = 0; phase < text.length; ++phase) {//phases
-			for (int extension = lastExtension + 1; extension <= phase; ++extension) {//extensions
+		int lastExtension = -1; // last Rule 1/2 extension
+		for (int phase = 0; phase < text.length; ++phase) {// phases
+			for (int extension = lastExtension + 1; extension <= phase; ++extension) {// extensions
 				int rule = extend(phase, extension);
-				if (rule == 2) {//rule 2 applied
+				if (rule == 2) {// rule 2 applied
 					lastExtension = extension;
-				} else {//rule 3 applied
+				} else {// rule 3 applied
 					break;
 				}
 			}
 		}
 	}
-	
+
 	/**
-	 * Returns all suffixes for the text that the suffix tree has been generated for
+	 * Returns all suffixes for the text that the suffix tree has been generated
+	 * for
+	 * 
 	 * @return A list containing all the suffixes generated from the suffix tree
 	 */
 	@SuppressWarnings("unused")
 	public List<String> getSuffix() {
 		StringBuilder sb = new StringBuilder();
 		walkToInternalNode(text, root, sb, "");
-		String[] suffix = {
-				"aabbabb$",
-				"ababbabbaabbabb$",
-				"abb$",
-				"abbaabbabb$",
-				"abbabbaabbabb$",
-				"abbabb$",
-				"$",
-				"baabbabb$",
-				"babb$",
-				"babbabbaabbabb$",
-				"babbaabbabb$",
-				"b$",
-				"bbaabbabb$",
-				"bbabbaabbabb$",
-				"bbabb$",
-				"bb$"
-		};
+		String[] suffix = { "aabbabb$", "ababbabbaabbabb$", "abb$",
+				"abbaabbabb$", "abbabbaabbabb$", "abbabb$", "$", "baabbabb$",
+				"babb$", "babbabbaabbabb$", "babbaabbabb$", "b$", "bbaabbabb$",
+				"bbabbaabbabb$", "bbabb$", "bb$" };
 		Boolean check = true;
-		//System.out.println("Original is ok? " + check);
+		// System.out.println("Original is ok? " + check);
 		String splitString = sb.toString();
 		String lines[] = splitString.split("\\r?\\n");
-		//System.out.println(Arrays.toString(lines));	
+		// System.out.println(Arrays.toString(lines));
 		return Arrays.asList(lines);
 	}
-	
+
 	/**
 	 * Walks to an internal node in the tree
-	 * @param text 		The text that the tree represents
-	 * @param node 		The current internal node
-	 * @param sb 		The string builder that builds all the suffixes
-	 * @param builder	Contains a string for all the previous edges in the subtree.
+	 * 
+	 * @param text
+	 *            The text that the tree represents
+	 * @param node
+	 *            The current internal node
+	 * @param sb
+	 *            The string builder that builds all the suffixes
+	 * @param builder
+	 *            Contains a string for all the previous edges in the subtree.
 	 */
-	private void walkToInternalNode(char[] text, InternalNode node, StringBuilder sb, String builder) {
-		//System.out.println("Internal node");
-		for(Edge edge : node) {
+	private void walkToInternalNode(char[] text, InternalNode node,
+			StringBuilder sb, String builder) {
+		// System.out.println("Internal node");
+		for (Edge edge : node) {
 			walkDownEdge(text, edge, sb, builder);
 		}
-		
+
 	}
-		
+
 	/**
 	 * Walks to a leaf node in the tree
-	 * @param node	The current laf node
-	 * @param sb	The string builder that builds all the suffixes	
+	 * 
+	 * @param node
+	 *            The current laf node
+	 * @param sb
+	 *            The string builder that builds all the suffixes
 	 */
 	private void walkToLeaf(LeafNode node, StringBuilder sb) {
-		//System.out.println("Leaf " + node.getPos() + "\n______");
+		// System.out.println("Leaf " + node.getPos() + "\n______");
 		sb.append('\n');
 	}
-	
+
 	/**
-	 * Walks down an edge in the tree and fetches the characters found on that edge.
-	 * @param text		The text that the tree represents
-	 * @param edge		The current edge
-	 * @param sb		The string builder that builds the suffixes
-	 * @param builder	The previous edges of the subtree
+	 * Walks down an edge in the tree and fetches the characters found on that
+	 * edge.
+	 * 
+	 * @param text
+	 *            The text that the tree represents
+	 * @param edge
+	 *            The current edge
+	 * @param sb
+	 *            The string builder that builds the suffixes
+	 * @param builder
+	 *            The previous edges of the subtree
 	 */
-	private void walkDownEdge(char[] text, Edge edge, StringBuilder sb, String builder) {
-		//StringBuilder builder = new StringBuilder();
+	private void walkDownEdge(char[] text, Edge edge, StringBuilder sb,
+			String builder) {
+		// StringBuilder builder = new StringBuilder();
 		String build = builder;
 		String edgeString = "";
-		for(int i = edge.getStart(); i <= edge.getEnd(); i++) {
-			//if(text[i] == '$') {
-				//sb.append("//0");
-			//}
-			//else {
-				sb.append(text[i]);
-				edgeString += text[i];
-			//}
+		for (int i = edge.getStart(); i <= edge.getEnd(); i++) {
+			// if(text[i] == '$') {
+			// sb.append("//0");
+			// }
+			// else {
+			sb.append(text[i]);
+			edgeString += text[i];
+			// }
 		}
 		builder += edgeString;
- 		Node nextNode = edge.getNextNode();
+		Node nextNode = edge.getNextNode();
 		if (nextNode instanceof InternalNode) {
 			walkToInternalNode(text, (InternalNode) nextNode, sb, builder);
-		}
-		else {
+		} else {
 			walkToLeaf((LeafNode) nextNode, sb);
 			sb.append(build);
 		}
 	}
 
-	//return extension rule type, 2 or 3
+	// return extension rule type, 2 or 3
 	private int extend(int phase, int extension) {
 		current.walkDownWithOutCompare(phase, gamma);
 		gamma = 0;
-		if (current.isInternalNode()) {//current position is an internal node
+		if (current.isInternalNode()) {// current position is an internal node
 			if (lastCreate != null && lastCreate.getSuffix() == null) {
 				lastCreate.setSuffix(current.getNode());
 			}
 		}
-		if (!current.checkNext(text[phase])) {//Rule 2 applied
+		if (!current.checkNext(text[phase])) {// Rule 2 applied
 			current.split(phase, extension);
 			return 2;
-		} else {//Rule 3 applied
+		} else {// Rule 3 applied
 			current.walkDownOneStep(text[phase]);
 			return 3;
 		}

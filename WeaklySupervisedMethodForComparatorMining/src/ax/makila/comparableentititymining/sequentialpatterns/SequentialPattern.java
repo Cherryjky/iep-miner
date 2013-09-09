@@ -1,7 +1,9 @@
-package makila.comparableentititymining.sequentialpatterns;
+package ax.makila.comparableentititymining.sequentialpatterns;
 
 public interface SequentialPattern {
 	public boolean isLexical();
+
 	public boolean isGeneralized();
+
 	public boolean isSpecialized();
 }
