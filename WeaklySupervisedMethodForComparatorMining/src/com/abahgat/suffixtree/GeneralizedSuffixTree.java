@@ -17,6 +17,8 @@ package com.abahgat.suffixtree;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A Generalized Suffix Tree, based on the Ukkonen's paper "On-line construction of suffix trees"
@@ -66,6 +68,97 @@ public class GeneralizedSuffixTree {
      * The last leaf that was added during the update operation
      */
     private Node activeLeaf = root;
+    
+    /**
+     * Searches for labels matching the given regular expression within the GST.
+     * 
+     * Returns all suffixes that matches the <tt>regex</tt> that was supplied as input
+     * 
+     * @author fredrik
+     * @param regex the regex to match labels against
+     * @return the collection of suffixes that matches the input <tt>regex</tt>
+     */
+    public Set<String> searchMatchingSuffix(String regex) {
+    	Node currentNode = root;
+    	Set<String> ret = new HashSet<String>();
+    	
+    	EdgeBag edges = currentNode.getEdges();
+    	for(Edge currentEdge : edges.values()) {
+    		Node next = currentEdge.getDest();
+    		String label = currentEdge.getLabel();
+    		if(label.matches(regex)) {
+    			if(next.getEdges().values().length == 0) {
+    				ret.add(label);
+    			}
+    			else {
+    				fetch(next, ret, label);
+    			}
+    		}
+    		else {
+    			if(next.getEdges().values().length != 0) {
+    				fetchAndMatch(next, ret, label, regex);
+    			}
+    		}
+    	}
+    	return ret;
+    }
+    
+    /**
+     * Fetches all strings from the subtrees in the GST starting from 
+     * <tt>currentNode</tt>. When it reaches a leaf node, it adds the suffix to 
+     * <tt>set</tt>
+     * @param currentNode The current node traversed in the tree
+     * @param set The set that the suffixes are added to
+     * @param prevLabels The labels on the edges previously traversed in the subtree.
+     */
+    private void fetch(Node currentNode, Set<String> set, String prevLabels) {
+    	for(Edge currentEdge : currentNode.getEdges().values()) {
+    		String currentLabel = currentEdge.getLabel();
+    		currentLabel = prevLabels + currentLabel;
+    		Node next = currentEdge.getDest();
+    		if(next.getEdges().values().length == 0) {
+    			set.add(currentLabel);
+    		}
+    		else {
+    			fetch(next, set, currentLabel);
+    		}
+    	}
+    }
+    
+    /**
+     * Fetchas all the strings in the GST that matches <tt>regex</tt> in the GST, starting
+     * from <tt>currentNode</tt>. When it reaches a leaf node, it adds the suffix to 
+     * <tt>set</tt>. If a label has matched <tt>regex</tt> but we still haven't reached
+     * a leaf node, we don't need to match the labels against the regular expression any 
+     * more because all the subsequent labels will also match <tt>regex</tt>.
+     * @param currentNode The current node traversed in the tree
+     * @param set The set that the suffixes are added to
+     * @param prevLabels The labels on the edges previously traversed in the subtree.
+     * @param regex The regular expression that labels are matched against.
+     */
+    private void fetchAndMatch(Node currentNode, Set<String> set, String prevLabels, String regex) {
+    	for(Edge currentEdge : currentNode.getEdges().values()) {
+    		String currentLabel = currentEdge.getLabel();
+    		currentLabel = prevLabels + currentLabel;
+    		Node next = currentEdge.getDest();
+    		if(currentLabel.matches(regex)) {
+    			if(next.getEdges().values().length == 0) {
+    				set.add(currentLabel);
+    			}
+    			else {
+    				fetch(next, set, currentLabel);
+    			}
+    		}
+    		else {
+    			if(next.getEdges().values().length != 0) {
+    				fetchAndMatch(next, set, currentLabel, regex);
+    			}
+    		}
+    		
+    	}
+    }
+    
+    
 
     /**
      * Searches for the given word within the GST.
