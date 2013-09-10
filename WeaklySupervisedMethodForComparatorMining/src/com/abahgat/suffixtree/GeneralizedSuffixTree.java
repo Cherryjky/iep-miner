@@ -20,6 +20,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import ax.makila.comparableentitymining.utils.DotUtils;
+
+
 /**
  * A Generalized Suffix Tree, based on the Ukkonen's paper "On-line construction of suffix trees"
  * http://www.cs.helsinki.fi/u/ukkonen/SuffixT1withFigs.pdf
@@ -158,7 +161,16 @@ public class GeneralizedSuffixTree {
     	}
     }
     
-    
+    public void createDotGraph() {
+    	Node currentNode = root;
+    	String rootName = "root";
+    	EdgeBag edges = root.getEdges();
+    	DotUtils dot = new DotUtils();
+    	for(Edge currentEdge : edges.values()) {
+    		String currentLabel = currentEdge.getLabel();
+    		//dot.link(rootName, currentLabel);
+    	}
+    }
 
     /**
      * Searches for the given word within the GST.
