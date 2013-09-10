@@ -103,7 +103,8 @@ public class GeneralizedSuffixTree {
      * @return at most <tt>results</tt> values for the given word
      * @see GeneralizedSuffixTree#ResultInfo
      */
-    public ResultInfo searchWithCount(String word, int to) {
+    @SuppressWarnings("unchecked")
+	public ResultInfo searchWithCount(String word, int to) {
         Node tmpNode = searchNode(word);
         if (tmpNode == null) {
             return new ResultInfo(Collections.EMPTY_LIST, 0);
