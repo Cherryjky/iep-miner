@@ -169,6 +169,7 @@ public class SuffixTreeScannerTests {
 		matchingSuffixes(test0, regex0, "test1");
 		matchingSuffixes(test1, regex1, "test2");
 		matchingSuffixes(test2, regex0, "test3");
+		//Tests the creation of dot files
 		testDotGen(test1);
 	}
 	
