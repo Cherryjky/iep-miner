@@ -20,7 +20,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import ax.makila.comparableentitymining.utils.DotUtils;
+import ax.makila.comparableentitymining.utils.DotWriter;
+import ax.makila.comparableentitymining.utils.DotWriter.DotNode;
 
 
 /**
@@ -161,14 +162,33 @@ public class GeneralizedSuffixTree {
     	}
     }
     
-    public void createDotGraph() {
+    @SuppressWarnings("unused")
+	public void createDotGraph() {
     	Node currentNode = root;
-    	String rootName = "root";
     	EdgeBag edges = root.getEdges();
-    	DotUtils dot = new DotUtils();
+    	DotWriter dot = new DotWriter();
+    	int level = 0;
+    	DotNode rootNode = dot.newNode("root");
     	for(Edge currentEdge : edges.values()) {
     		String currentLabel = currentEdge.getLabel();
-    		//dot.link(rootName, currentLabel);
+    		DotNode dotNode = dot.newNode(currentLabel);
+    		dot.link(rootNode, dotNode);
+    		Node nextNode = currentEdge.getDest();
+    		descend(nextNode, dotNode, dot, currentLabel, level);
+    	}
+    	dot.finalize();
+    	
+    }
+    
+    private void descend(Node currentNode, DotNode prevDotNode, DotWriter dot, String origin, int level) {
+    	EdgeBag edges = currentNode.getEdges();
+    	level++;
+    	for(Edge currentEdge : edges.values()) {
+    		String currentLabel = currentEdge.getLabel();
+    		DotNode dotNode = dot.newNode(currentLabel);
+    		dot.link(prevDotNode, dotNode);
+    		Node nextNode = currentEdge.getDest();
+    		descend(nextNode, dotNode, dot, currentLabel, level);
     	}
     }
 
