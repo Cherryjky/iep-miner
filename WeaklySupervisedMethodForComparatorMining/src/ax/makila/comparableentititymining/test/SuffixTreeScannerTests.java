@@ -169,6 +169,7 @@ public class SuffixTreeScannerTests {
 		matchingSuffixes(test0, regex0, "test1");
 		matchingSuffixes(test1, regex1, "test2");
 		matchingSuffixes(test2, regex0, "test3");
+		testDotGen(test1);
 	}
 	
 	public void matchingSuffixes(String[] arr, String regex, String testName) {
@@ -192,8 +193,13 @@ public class SuffixTreeScannerTests {
 		catch(AssertionError ase) {
 			fail("Test: " + testName + ". " + ase.getMessage());
 		}
-		
-		
-		
+	}
+	
+	public void testDotGen(String[] arr) {
+		GeneralizedSuffixTree tree = new GeneralizedSuffixTree();
+		for(int i = 0; i < arr.length; i++) {
+			tree.put(arr[i], i);
+		}
+		tree.createDotGraph();
 	}
 }
