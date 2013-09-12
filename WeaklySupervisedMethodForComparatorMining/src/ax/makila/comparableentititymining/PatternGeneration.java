@@ -14,7 +14,6 @@ import ax.makila.comparableentititymining.sequentialpatterns.patterns.LexicalSeq
 import ax.makila.comparableentititymining.sequentialpatterns.patterns.Pattern;
 
 import com.abahgat.suffixtree.GeneralizedSuffixTree;
-import com.strongczq.SuffixTree;
 
 @SuppressWarnings("unused")
 public class PatternGeneration {
@@ -51,23 +50,9 @@ public class PatternGeneration {
 	public static List<Pattern> generateLexicalPatterns(List<String> questions) {
 		List<Pattern> lexicalPatterns = new ArrayList<Pattern>();
 		Map<String, Integer> candidatePatterns = new HashMap<String, Integer>();
-		for (String question : questions) {
-			SuffixTree tree = new SuffixTree();
-			tree.build(question.toCharArray());
-			// Only keep lexical patterns that contains more than one $C
-			for (String suffix : tree.getSuffix()) {
-				int $C = suffix.indexOf(comparator);
-				boolean moreThanOne$C = $C != -1
-						&& suffix.indexOf(comparator, $C + 1) != -1;
-				if (moreThanOne$C) {
-					if (candidatePatterns.containsKey(suffix)) {
-						candidatePatterns.put(suffix,
-								candidatePatterns.get(suffix) + 1);
-					} else {
-						candidatePatterns.put(suffix, 1);
-					}
-				}
-			}
+		GeneralizedSuffixTree tree = new GeneralizedSuffixTree();
+		for(int i = 0; i < questions.size(); i++) {
+			tree.put(questions.get(i), i);
 		}
 		// Patterns are only kept if their frequency in the collection is more
 		// than an empirically determined number beta
