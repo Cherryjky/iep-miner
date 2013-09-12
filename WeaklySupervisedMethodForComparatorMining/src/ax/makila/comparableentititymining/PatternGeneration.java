@@ -2,10 +2,8 @@ package ax.makila.comparableentititymining;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import ax.makila.comparableentititymining.postagger.StanfordPosTagger;
@@ -18,7 +16,7 @@ import com.abahgat.suffixtree.GeneralizedSuffixTree;
 @SuppressWarnings("unused")
 public class PatternGeneration {
 	private static String comparator = MiningIndicativeExtractionPatterns.comparator;
-	private static double beta = MiningIndicativeExtractionPatterns.beta;
+	private static int beta = MiningIndicativeExtractionPatterns.beta;
 
 	public static List<String> mineGoodPatterns(
 			List<String> seedComparatorPairs,
@@ -28,9 +26,9 @@ public class PatternGeneration {
 			 * String surfacePattern = surfaceTextPatternMining(question)
 			 */
 		}
-		List<Pattern> lexicalPatterns = generateLexicalPatterns(comparativeQuestionSet);
-		List<Pattern> generalizedPatterns = generateGeneralizedPatterns(lexicalPatterns);
-		List<Pattern> specializedPatterns = generateSpecializedPatterns(
+		Set<Pattern> lexicalPatterns = generateLexicalPatterns(comparativeQuestionSet);
+		Set<Pattern> generalizedPatterns = generateGeneralizedPatterns(lexicalPatterns);
+		Set<Pattern> specializedPatterns = generateSpecializedPatterns(
 				lexicalPatterns, generalizedPatterns);
 
 		return null;
@@ -47,33 +45,42 @@ public class PatternGeneration {
 	 *            The set of questions to generate patterns from
 	 * @return A set of lexical patterns
 	 */
-	public static List<Pattern> generateLexicalPatterns(List<String> questions) {
-		List<Pattern> lexicalPatterns = new ArrayList<Pattern>();
-		Map<String, Integer> candidatePatterns = new HashMap<String, Integer>();
+	public static Set<Pattern> generateLexicalPatterns(List<String> questions) {
+		Set<Pattern> lexicalPatterns = new HashSet<Pattern>();
 		GeneralizedSuffixTree tree = new GeneralizedSuffixTree();
+		String regex = "(^|.*?\\s)\\$c.*?\\s\\$c[^A-Za-z0-9_$].*?$";
+		//Add all suffixes to the 
 		for(int i = 0; i < questions.size(); i++) {
 			tree.put(questions.get(i), i);
 		}
+		Set<String> candidatePatterns = tree.searchMatchingSuffix(regex);
 		// Patterns are only kept if their frequency in the collection is more
 		// than an empirically determined number beta
-		Iterator<Map.Entry<String, Integer>> entries = candidatePatterns
-				.entrySet().iterator();
-		while (entries.hasNext()) {
-			Map.Entry<String, Integer> entry = entries.next();
-			String key = entry.getKey();
-			Integer value = entry.getValue();
-			if (value <= beta) {
-				System.out.println(entries.toString());
-				entries.remove();
-				// candidatePatterns.remove(key);
+		for(String candidate : candidatePatterns) {
+			if(isFrequent(candidate, questions, beta)) {
+				LexicalSequence lex = new LexicalSequence(candidate);
+				lexicalPatterns.add(lex);
 			}
 		}
-		Set<String> keySet = candidatePatterns.keySet();
-		for (String key : keySet) {
-			Pattern seq = new LexicalSequence(key);
-			lexicalPatterns.add(seq);
-		}
 		return lexicalPatterns;
+	}
+	
+	/**
+	 * A pattern is only kept if it's frequency in the collection <tt>questionSet</tt>
+	 * exceeds a threshold limit <tt>beta</tt>. 
+	 * @param pattern The pattern that will be checked with its frequency 
+	 * @param questionSet The set of questions that the pattern will match against
+	 * @param beta The threshold frequency for the pattern
+	 * @return true if the pattern exceeds the threshold, else false.
+	 */
+	private static boolean isFrequent(String pattern, List<String> questionSet, int beta) {
+		int counter = 0;
+		for(String question : questionSet) {
+			if(question.endsWith(pattern)) {
+				counter++;
+			}
+		}
+		return counter > beta;
 	}
 
 	/**
@@ -87,10 +94,10 @@ public class PatternGeneration {
 	 *            generated
 	 * @return A set of generalized patterns
 	 */
-	public static List<Pattern> generateGeneralizedPatterns(
-			List<Pattern> patterns) {
+	public static Set<Pattern> generateGeneralizedPatterns(
+			Set<Pattern> patterns) {
 		System.out.println("Start generalization");
-		List<Pattern> generalizedPatterns = new ArrayList<Pattern>();
+		Set<Pattern> generalizedPatterns = new HashSet<Pattern>();
 		for (Pattern pattern : patterns) {
 			List<List<String>> posTags = StanfordPosTagger
 					.getStringTags(pattern.toString());
@@ -135,22 +142,23 @@ public class PatternGeneration {
 	 * @return A set of specialized items generated from lexical and general
 	 *         patterns.
 	 */
-	public static List<Pattern> generateSpecializedPatterns(
-			List<Pattern> lexicalPatterns, List<Pattern> generalPatterns) {
+	public static Set<Pattern> generateSpecializedPatterns(
+			Set<Pattern> lexicalPatterns, Set<Pattern> generalPatterns) {
 		List<Pattern> combinedPatterns = new ArrayList<Pattern>(lexicalPatterns);
 		combinedPatterns.addAll(generalPatterns);
+		Set<Pattern> specializedPatterns = new HashSet<Pattern>();
 		for (int i = 0; i < combinedPatterns.size(); i++) {
 			Pattern pattern = combinedPatterns.get(i);
 			if (pattern.equals(comparator)) {
 				String addPos = combinedPatterns.get(i) + "_pos";
 				if (pattern.isLexical()) {
-					combinedPatterns.set(i, new LexicalSequence(addPos));
+					specializedPatterns.add(new LexicalSequence(addPos));
 				} else {
-					combinedPatterns.set(i, new GeneralizedSequence(addPos));
+					specializedPatterns.add(new GeneralizedSequence(addPos));
 				}
 			}
 		}
-		return combinedPatterns;
+		return specializedPatterns;
 	}
 
 	/**

@@ -20,7 +20,7 @@ public class MiningIndicativeExtractionPatterns {
 	 */
 	public static final double alpha = 3.0;
 	// Beta and gamma is threshold parameters
-	public static final double beta = 10.0;
+	public static final int beta = 10;
 	/**
 	 * Used as a threshold for determining reliable patterns
 	 */
