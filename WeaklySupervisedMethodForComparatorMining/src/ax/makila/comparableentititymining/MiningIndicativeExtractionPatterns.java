@@ -8,7 +8,6 @@ import java.util.regex.Pattern;
 
 import ax.makila.comparableentititymining.postagger.StanfordPosTagger;
 import ax.makila.comparableentititymining.postagger.StanfordPosTagger.PosTag;
-
 import edu.stanford.nlp.ling.TaggedWord;
 
 public class MiningIndicativeExtractionPatterns {
@@ -40,24 +39,36 @@ public class MiningIndicativeExtractionPatterns {
 	 */
 	public static final String[] yahooAnswers = {
 			// comparable questions x 19
-			"#start Is it better to be unhealthy and happy$c or good looking and stressed$c? #end",
-			"#start Is it better to be unhealthy and happy$c or good looking and stressed$c? #end",
-			"#start Is it better to be unhealthy and happy$c or good looking and stressed$c? #end",
-			"#start Is it better to be unhealthy and happy$c or good looking and stressed$c? #end",
-			"#start Is it better to be unhealthy and happy$c or good looking and stressed$c? #end",
-			"#start Is it better to be unhealthy and happy$c or good looking and stressed$c? #end",
-			"#start Is it better to be unhealthy and happy$c or good looking and stressed$c? #end",
-			"#start Is it better to be unhealthy and happy$c or good looking and stressed$c? #end",
-			"#start Is it better to be unhealthy and happy$c or good looking and stressed$c? #end",
-			"#start Is it better to be unhealthy and happy$c or good looking and stressed$c? #end",
-			"#start Is it better to be unhealthy and happy$c or good looking and stressed$c? #end",
-			"#start Is it better to be unhealthy and happy$c or good looking and stressed$c? #end",
-			"#start Is it better to be unhealthy and happy$c or good looking and stressed$c? #end",
-			"#start Is it better to be unhealthy and happy$c or good looking and stressed$c? #end",
-			"#start Is it better to be unhealthy and happy$c or good looking and stressed$c? #end",
-			"#start Is it better to be unhealthy and happy$c or good looking and stressed$c? #end",
-			"#start Is it better to be unhealthy and happy$c or good looking and stressed$c? #end",
-			"#start Is it better to be unhealthy and happy$c or good looking and stressed$c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
+			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
 			"#start are there more delicious chocolate in cookies or in old car batteris? #end",
 			"#start What is better national guard or reserve? #end",
 			"#start What is the better dog food pedigree or eukanuba? #end",
@@ -172,12 +183,15 @@ public class MiningIndicativeExtractionPatterns {
 	 * @return A list of reliable IEP.
 	 */
 	private List<String> iepMining() {
-		List<Pair<String, String>> seedComparatorPairs = extractSeedComparators(
-				initialIEP, questionArchive);
-		List<Pair<String, String>> newComparatorPairs = new ArrayList<Pair<String, String>>(
-				seedComparatorPairs);
+		System.out.println("Start");
+		//Get seed comparator pairs
+		//List<Pair<String, String>> seedComparatorPairs = extractSeedComparators(initialIEP, questionArchive);
+		//List<Pair<String, String>> newComparatorPairs = new ArrayList<Pair<String, String>>(seedComparatorPairs);
+		//Contains the patterns generated during each iteration
 		List<String> newPatterns = new ArrayList<String>();
+		//All the questions identified as comparative
 		List<String> comparativeQuestionSet = new ArrayList<String>();
+		//All patterns gathered from the previous iteration
 		List<String> iep = new ArrayList<String>();
 		do {
 			iep.addAll(newPatterns);
@@ -191,23 +205,21 @@ public class MiningIndicativeExtractionPatterns {
 				}
 			}
 			// newPatterns =
-			// PatternExtraction.mineGoodPatterns(seedComparatorPairs,
-			// comparativeQuestionSet);
-			newComparatorPairs.clear();
+			PatternGeneration.mineGoodPatterns(null, questionArchive);
+			/*//newComparatorPairs.clear();
 			for (String q : questionArchive) {
 				List<String> comparatorPairs = extractComparableComparators(
 						iep, q);
-				if (comparatorPairs != null
-						&& newComparatorPairs.containsAll(comparatorPairs)) {
+				if (comparatorPairs != null&& newComparatorPairs.containsAll(comparatorPairs)) {
 					// seedComparatorPairs.addAll(comparatorPairs);
 				}
 			}
-
+		*/
 		} while (newPatterns.size() != 0);
-
 		return iep;
 	}
 
+	@SuppressWarnings("unused")
 	private List<String> extractComparableComparators(List<String> iep, String q) {
 		// TODO Auto-generated method stub
 		return null;
@@ -270,11 +282,11 @@ public class MiningIndicativeExtractionPatterns {
 	 * @param questions
 	 * @return A list containing comparator pairs extracted from the sentence
 	 */
+	@SuppressWarnings("unused")
 	private List<Pair<String, String>> extractSeedComparators(
 			String bootstrappingIEP, List<String> questions) {
 		for (String q : questions) {
 			PosTag posTag = StanfordPosTagger.posTagString(q);
-			System.out.println(phraseChunker(posTag));
 		}
 		/*
 		 * if(bootstrappingIEP.isLexical()) { List<List<String>> sequences = new

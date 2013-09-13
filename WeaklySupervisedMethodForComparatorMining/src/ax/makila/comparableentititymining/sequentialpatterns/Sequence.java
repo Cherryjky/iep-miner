@@ -9,13 +9,19 @@ import ax.makila.comparableentititymining.postagger.StanfordPosTagger;
 public class Sequence implements SequentialPattern {
 
 	public String sequence = null;
-	public List<List<String>> tokenizedSequence = null;
-	public List<ArrayList<TaggedWord>> posTags = null;
+	public List<String> tokenizedSequence = new ArrayList<String>();
+	public List<TaggedWord> posTags = new ArrayList<TaggedWord>();
 
 	public Sequence(String seq) {
 		sequence = seq;
-		tokenizedSequence = StanfordPosTagger.tokenizeStringMergeComp(sequence);
-		posTags = StanfordPosTagger.tagStringHandleIdentifier(sequence);
+		List<List<String>> tokens = StanfordPosTagger.tokenizeStringMergeComp(sequence);
+		for(List<String> token : tokens) {
+			tokenizedSequence.addAll(token);
+		}
+		List<ArrayList<TaggedWord>> tags = StanfordPosTagger.tagStringHandleIdentifier(sequence);
+		for(List<TaggedWord> pos : tags) {
+			posTags.addAll(pos);
+		}
 	}
 
 	@Override
@@ -44,17 +50,17 @@ public class Sequence implements SequentialPattern {
 	}
 
 	@Override
-	public List<ArrayList<TaggedWord>> getPosTags() {
+	public List<TaggedWord> getPosTags() {
 		return posTags;
 	}
 
 	@Override
-	public List<List<String>> getTokenizedSequence() {
+	public List<String> getTokenizedSequence() {
 		return tokenizedSequence;
 	}
 
 	@Override
-	public void setPosTags(List<ArrayList<TaggedWord>> posTags) {
+	public void setPosTags(List<TaggedWord> posTags) {
 		this.posTags = posTags;
 		
 	}

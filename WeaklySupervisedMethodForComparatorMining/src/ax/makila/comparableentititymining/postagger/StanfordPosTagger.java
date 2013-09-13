@@ -70,16 +70,17 @@ public class StanfordPosTagger {
 			ListIterator<TaggedWord> it = wordList.listIterator();
 			while(it.hasNext()) {
 				TaggedWord word = it.next();
-				if(word.equals("#start") || word.equals("#end")) {
+				if(word.value().equals("#start") || word.value().equals("#end")) {
 					word.setTag("#");
 				}
 				//The tagger splits $c to $ and c so we have to merge them
-				else if(word.equals("$") && it.hasNext()) {
+				else if(word.value().equals("$") && it.hasNext()) {
 					TaggedWord next = it.next();
-					if(next.equals("c")) {
+					if(next.value().equals("c")) {
+						it.remove();
+						it.previous();
 						word.setValue("$c");
 						word.setTag(next.tag());
-						it.remove();
 					}
 					else {
 						it.previous();
@@ -182,14 +183,17 @@ public class StanfordPosTagger {
 				if(t.equals("$") && it.hasNext()) {
 					String n = it.next();
 					if(n.equals("c")) {
-						t = "$c";
 						it.remove();
+						int prevIndex = it.previousIndex();
+						it.previous();
+						token.set(prevIndex, "$c");
 					}
 					else {
 						it.previous();
 					}
 				}
 			}
+			
 			
 		}
 		return tokens;

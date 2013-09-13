@@ -1,6 +1,5 @@
 package ax.makila.comparableentititymining.sequentialpatterns;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import edu.stanford.nlp.ling.TaggedWord;
@@ -12,10 +11,10 @@ public interface SequentialPattern {
 
 	public boolean isSpecialized();
 	
-	public List<ArrayList<TaggedWord>> getPosTags();
+	public List<TaggedWord> getPosTags();
 	
-	public List<List<String>> getTokenizedSequence();
+	public List<String> getTokenizedSequence();
 	
-	public void setPosTags(List<ArrayList<TaggedWord>> posTags);
+	public void setPosTags(List<TaggedWord> posTags);
 	
 }
