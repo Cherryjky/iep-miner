@@ -14,8 +14,8 @@ public class Sequence implements SequentialPattern {
 
 	public Sequence(String seq) {
 		sequence = seq;
-		tokenizedSequence = StanfordPosTagger.tokenizeString(sequence);
-		posTags = StanfordPosTagger.tagString(sequence);
+		tokenizedSequence = StanfordPosTagger.tokenizeStringMergeComp(sequence);
+		posTags = StanfordPosTagger.tagStringHandleIdentifier(sequence);
 	}
 
 	@Override
@@ -41,6 +41,22 @@ public class Sequence implements SequentialPattern {
 	@Override
 	public boolean isSpecialized() {
 		return false;
+	}
+
+	@Override
+	public List<ArrayList<TaggedWord>> getPosTags() {
+		return posTags;
+	}
+
+	@Override
+	public List<List<String>> getTokenizedSequence() {
+		return tokenizedSequence;
+	}
+
+	@Override
+	public void setPosTags(List<ArrayList<TaggedWord>> posTags) {
+		this.posTags = posTags;
+		
 	}
 
 }
