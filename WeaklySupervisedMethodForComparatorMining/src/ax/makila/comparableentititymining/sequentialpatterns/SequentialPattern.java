@@ -6,4 +6,5 @@ public interface SequentialPattern {
 	public boolean isGeneralized();
 
 	public boolean isSpecialized();
+	
 }
