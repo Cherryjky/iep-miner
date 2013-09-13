@@ -56,6 +56,44 @@ public class StanfordPosTagger {
 		List<ArrayList<TaggedWord>> taggedWords = tagger.process(sentences);
 		return taggedWords;
 	}
+	
+	/**
+	 * Tags a string but sets a special pos tag, "#" to #start and #end and merges any
+	 * occurence of a lone $ and a c to $c.
+	 * @param question The input string
+	 * @return A sentence separated array of tagged words
+	 */
+	public static List<ArrayList<TaggedWord>> tagStringHandleIdentifier(String question) {
+		List<ArrayList<TaggedWord>> taggedWords = tagString(question);
+		
+		for(ArrayList<TaggedWord> wordList : taggedWords) {
+			ListIterator<TaggedWord> it = wordList.listIterator();
+			while(it.hasNext()) {
+				TaggedWord word = it.next();
+				if(word.equals("#start") || word.equals("#end")) {
+					word.setTag("#");
+				}
+				//The tagger splits $c to $ and c so we have to merge them
+				else if(word.equals("$") && it.hasNext()) {
+					TaggedWord next = it.next();
+					if(next.equals("c")) {
+						word.setValue("$c");
+						word.setTag(next.tag());
+						it.remove();
+					}
+					else {
+						it.previous();
+					}
+				}
+			}
+		}
+		
+		return taggedWords;
+		
+	}
+	
+	
+	
 
 	/**
 	 * Tags the words in the document for each sentence and return them as
@@ -129,6 +167,34 @@ public class StanfordPosTagger {
 		return tags;
 
 	}
+	
+	/**
+	 * Tokenizes the string and merge $ and c to $c 
+	 * @param question The question to be tokenized
+	 * @return The tokenized question
+	 */
+	public static List<List<String>> tokenizeStringMergeComp(String question) {
+		List<List<String>> tokens = tokenizeString(question);
+		for(List<String> token : tokens) {
+			ListIterator<String> it = token.listIterator();
+			while(it.hasNext()) {
+				String t = it.next();
+				if(t.equals("$") && it.hasNext()) {
+					String n = it.next();
+					if(n.equals("c")) {
+						t = "$c";
+						it.remove();
+					}
+					else {
+						it.previous();
+					}
+				}
+			}
+			
+		}
+		return tokens;
+	}
+	
 
 	/**
 	 * Tags a string with it's POS tags and then returns a string representation
@@ -229,6 +295,12 @@ public class StanfordPosTagger {
 		return untokenized;
 	}
 
+	/**
+	 * Tokenizes the String but removes tags from #start, #end and merge the occurence of
+	 * $ and c to $c
+	 * @param string The input string to be tagged
+	 * @return A PosTag object containing the tagged string
+	 */
 	public static PosTag posTagString(String string) {
 		List<List<HasWord>> sentences = null;
 		sentences = MaxentTagger.tokenizeText(new StringReader(string));
