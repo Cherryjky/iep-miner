@@ -1,17 +1,19 @@
 package ax.makila.comparableentititymining;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import ax.makila.comparableentititymining.postagger.StanfordPosTagger;
+import ax.makila.comparableentititymining.sequentialpatterns.SequentialPattern;
 import ax.makila.comparableentititymining.sequentialpatterns.patterns.GeneralizedSequence;
 import ax.makila.comparableentititymining.sequentialpatterns.patterns.LexicalSequence;
-import ax.makila.comparableentititymining.sequentialpatterns.patterns.Pattern;
+import ax.makila.comparableentititymining.sequentialpatterns.patterns.SpecializedSequence;
 
 import com.abahgat.suffixtree.GeneralizedSuffixTree;
+
+import edu.stanford.nlp.ling.TaggedWord;
+import edu.stanford.nlp.process.PTBTokenizer;
 
 @SuppressWarnings("unused")
 public class PatternGeneration {
@@ -26,9 +28,9 @@ public class PatternGeneration {
 			 * String surfacePattern = surfaceTextPatternMining(question)
 			 */
 		}
-		Set<Pattern> lexicalPatterns = generateLexicalPatterns(comparativeQuestionSet);
-		Set<Pattern> generalizedPatterns = generateGeneralizedPatterns(lexicalPatterns);
-		Set<Pattern> specializedPatterns = generateSpecializedPatterns(
+		Set<SequentialPattern> lexicalPatterns = generateLexicalPatterns(comparativeQuestionSet);
+		Set<SequentialPattern> generalizedPatterns = generateGeneralizedPatterns(lexicalPatterns);
+		Set<SequentialPattern> specializedPatterns = generateSpecializedPatterns(
 				lexicalPatterns, generalizedPatterns);
 
 		return null;
@@ -45,8 +47,8 @@ public class PatternGeneration {
 	 *            The set of questions to generate patterns from
 	 * @return A set of lexical patterns
 	 */
-	public static Set<Pattern> generateLexicalPatterns(List<String> questions) {
-		Set<Pattern> lexicalPatterns = new HashSet<Pattern>();
+	public static Set<SequentialPattern> generateLexicalPatterns(List<String> questions) {
+		Set<SequentialPattern> lexicalPatterns = new HashSet<SequentialPattern>();
 		GeneralizedSuffixTree tree = new GeneralizedSuffixTree();
 		String regex = "(^|.*?\\s)\\$c.*?\\s\\$c[^A-Za-z0-9_$].*?$";
 		//Add all suffixes to the 
@@ -89,40 +91,57 @@ public class PatternGeneration {
 	 * 2^(n-1) generalized patterns can be produced from a lexical pattern
 	 * containing N words excluding $Cs.
 	 * 
-	 * @param patterns
+	 * @param lexPatterns
 	 *            A lexical pattern from which generalized patterns can be
 	 *            generated
 	 * @return A set of generalized patterns
 	 */
-	public static Set<Pattern> generateGeneralizedPatterns(
-			Set<Pattern> patterns) {
-		System.out.println("Start generalization");
-		Set<Pattern> generalizedPatterns = new HashSet<Pattern>();
-		for (Pattern pattern : patterns) {
-			List<List<String>> posTags = StanfordPosTagger
-					.getStringTags(pattern.toString());
-			List<List<String>> tokenizedWords = StanfordPosTagger
-					.tokenizedString(pattern.toString());
-			try {
-				if (posTags.size() != tokenizedWords.size()) {
-					throw new Exception();
+	public static Set<SequentialPattern> generateGeneralizedPatterns(
+			Set<SequentialPattern> lexPatterns) {
+		Set<SequentialPattern> generalizedPatterns = new HashSet<SequentialPattern>();
+		for(SequentialPattern sequence : lexPatterns) {
+			List<ArrayList<TaggedWord>> taggedSequence = sequence.getPosTags();
+			StringBuilder sb = new StringBuilder();
+			for(ArrayList<TaggedWord> tagged : taggedSequence) {
+				//Checks if the string starts or ends with #start or #end
+				int start = 0;
+				int end = 0;
+				if(tagged.get(0).tag().equals("#")) {
+					start = 1;
 				}
-			} catch (Exception ex) {
-				System.err
-						.println("Tags and token length mismatch. Something is funky...");
-			}
-			for (int i = 0; i < posTags.size(); i++) {
-				List<List<String>> combinations = combinations(
-						tokenizedWords.get(i), posTags.get(i));
-				for (List<String> combo : combinations) {
-					String string = StanfordPosTagger.unTokenizeString(combo);
-					Pattern seq = new GeneralizedSequence(string);
-					generalizedPatterns.add(seq);
+				else if(tagged.get(tagged.size() - 1).tag().equals("#")) {
+					end = 1;
+				}
+				int numBits = tagged.size();
+				int max = (int) Math.pow(2, numBits - start - 1);
+				for(int i = 1 + start; i <= max; i += 1 + end) {
+					String format = "%" + numBits + "s";
+					String bin = String.format(format, Integer.toBinaryString(i))
+							.replace(' ', '0');
+					char[] binary = bin.toCharArray();
+					//A 1 in the binary array tells us that the word in that location
+					//in the sequence should be replaced by its pos tag
+					for(int j = 0; j < binary.length; j++) {
+						TaggedWord replace = tagged.get(j);
+						if(binary[j] == '1') {
+							//Ignore comparators
+							if(!replace.equals("$c")) {
+								sb.append(replace.tag());
+							}
+							else {
+								sb.append(replace.value());
+							}
+							sb.append(" ");
+						}
+					}
 				}
 			}
+			String s = PTBTokenizer.ptb2Text(sb.toString());
+			SequentialPattern seqPattern = new GeneralizedSequence(s);
+			seqPattern.setPosTags(taggedSequence);
+			generalizedPatterns.add(seqPattern);
+			
 		}
-		System.out.println("Size = " + generalizedPatterns.size()
-				+ "\nEnd generalization!");
 		return generalizedPatterns;
 	}
 
@@ -142,67 +161,30 @@ public class PatternGeneration {
 	 * @return A set of specialized items generated from lexical and general
 	 *         patterns.
 	 */
-	public static Set<Pattern> generateSpecializedPatterns(
-			Set<Pattern> lexicalPatterns, Set<Pattern> generalPatterns) {
-		List<Pattern> combinedPatterns = new ArrayList<Pattern>(lexicalPatterns);
+	public static Set<SequentialPattern> generateSpecializedPatterns(
+			Set<SequentialPattern> lexicalPatterns, Set<SequentialPattern> generalPatterns) {
+		List<SequentialPattern> combinedPatterns = new ArrayList<SequentialPattern>(lexicalPatterns);
 		combinedPatterns.addAll(generalPatterns);
-		Set<Pattern> specializedPatterns = new HashSet<Pattern>();
+		Set<SequentialPattern> specializedPatterns = new HashSet<SequentialPattern>();
 		for (int i = 0; i < combinedPatterns.size(); i++) {
-			Pattern pattern = combinedPatterns.get(i);
-			if (pattern.equals(comparator)) {
-				String addPos = combinedPatterns.get(i) + "_pos";
-				if (pattern.isLexical()) {
-					specializedPatterns.add(new LexicalSequence(addPos));
-				} else {
-					specializedPatterns.add(new GeneralizedSequence(addPos));
+			SequentialPattern pattern = combinedPatterns.get(i);
+			List<ArrayList<TaggedWord>> tokens = pattern.getPosTags();
+			StringBuilder sb = new StringBuilder();
+			for(ArrayList<TaggedWord> tagged : tokens) {
+				for(TaggedWord tag : tagged) {
+					if(tag.value().equals(comparator)) {
+						sb.append(tag.tag());
+					}
+					else {
+						sb.append(tag.value());
+					}
+					sb.append(" ");
 				}
 			}
+			String sequence = PTBTokenizer.ptb2Text(sb.toString());
+			SequentialPattern seq = new SpecializedSequence(sequence);
+			specializedPatterns.add(seq);
 		}
 		return specializedPatterns;
 	}
-
-	/**
-	 * Generates all combinations where each element from question is replaced
-	 * with the corresponding element from pos.
-	 * 
-	 * @param question
-	 *            Contains the item to be replaced
-	 * @param pos
-	 *            Contains the POS tags to replace the items
-	 * @return Lists containing all possible combinations with question items
-	 *         replaced with pos.
-	 */
-
-	private static List<List<String>> combinations(List<String> question,
-			List<String> pos) {
-		List<List<String>> replaced = new ArrayList<List<String>>();
-		// int max = (int) Math.pow(2, question.size() - 1);
-		int log = (int) Math.ceil(Math.log(question.size() + pos.size())
-				/ Math.log(2));
-		int max = (int) Math.pow(question.size() + pos.size(), 3);
-		int numBits = question.size();
-		for (int i = 1; i <= max; i++) {
-			String[] questionArray = question.toArray(new String[question
-					.size()]);
-			String format = "%" + question.size() + "s";
-			String bin = String.format(format, Integer.toBinaryString(i))
-					.replace(' ', '0');
-			char[] binary = bin.toCharArray();
-			if (binary.length > question.size()) {
-				break;
-			}
-			for (int j = 0; j < binary.length; j++) {
-				if (binary[j] == '1') {
-					if (!question.get(j).equals(comparator)) {
-						questionArray[j] = pos.get(j);
-					}
-				}
-			}
-			replaced.add(Arrays.asList(questionArray));
-		}
-		return replaced;
-	}
-	
-	
-
 }
