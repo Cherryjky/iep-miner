@@ -113,7 +113,7 @@ public class StanfordPosTagger {
 	 *            The string containing a question to be tokenized.
 	 * @return A double list split into sentences containing words.
 	 */
-	public static List<List<String>> tokenizedString(String question) {
+	public static List<List<String>> tokenizeString(String question) {
 		List<List<String>> tags = new ArrayList<List<String>>();
 		List<List<HasWord>> sentences = MaxentTagger
 				.tokenizeText(new StringReader(question));
