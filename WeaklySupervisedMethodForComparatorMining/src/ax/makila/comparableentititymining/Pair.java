@@ -24,10 +24,12 @@ public class Pair<X, Y> {
 		@SuppressWarnings("unchecked")
 		Pair<X, Y> pair = (Pair<X, Y>) o;
 		
-        return new EqualsBuilder().
-            append(x, pair.x).
-            append(y, pair.y).
-            isEquals();
+        Boolean eq0 = new EqualsBuilder().append(x, pair.x).append(y, pair.y).isEquals();
+        
+        Boolean eq1 = new EqualsBuilder().append(x, pair.y).append(y, pair.x).isEquals();
+        
+        return eq0 || eq1;
+        
 	}
 	
 	@Override
