@@ -3,14 +3,15 @@ package ax.makila.comparableentititymining.sequentialpatterns;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.stanford.nlp.ling.TaggedWord;
 import ax.makila.comparableentititymining.postagger.StanfordPosTagger;
+import edu.stanford.nlp.ling.TaggedWord;
 
 public class Sequence implements SequentialPattern {
 
 	public String sequence = null;
 	public List<String> tokenizedSequence = new ArrayList<String>();
 	public List<TaggedWord> posTags = new ArrayList<TaggedWord>();
+	public List<ArrayList<TaggedWord>> taggedWords = null;
 
 	public Sequence(String seq) {
 		sequence = seq;
@@ -18,8 +19,8 @@ public class Sequence implements SequentialPattern {
 		for(List<String> token : tokens) {
 			tokenizedSequence.addAll(token);
 		}
-		List<ArrayList<TaggedWord>> tags = StanfordPosTagger.tagStringHandleIdentifier(sequence);
-		for(List<TaggedWord> pos : tags) {
+		List<ArrayList<TaggedWord>> taggedWords = StanfordPosTagger.tagStringHandleIdentifier(sequence);
+		for(List<TaggedWord> pos : taggedWords) {
 			posTags.addAll(pos);
 		}
 	}
@@ -63,6 +64,11 @@ public class Sequence implements SequentialPattern {
 	public void setPosTags(List<TaggedWord> posTags) {
 		this.posTags = posTags;
 		
+	}
+
+	@Override
+	public List<ArrayList<TaggedWord>> getTaggedWords() {
+		return taggedWords;
 	}
 
 }
