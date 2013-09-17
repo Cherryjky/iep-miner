@@ -5,21 +5,24 @@ import java.util.List;
 
 public class PatternEvaluation {
 	String[] questionSet = null;
-	List<String> reliablePairRepository = new ArrayList<String>();
-
+	List<Pair<String,String>> reliablePairRepository = new ArrayList<Pair<String,String>>();
+	List<Pair<String,String>> likelyReliablePairRepository = new ArrayList<Pair<String,String>>();
+	double gamma = MiningIndicativeExtractionPatterns.gamma;
+	double lambda = MiningIndicativeExtractionPatterns.lambda;
+	double alpha = MiningIndicativeExtractionPatterns.alpha;
+	
 	/**
 	 * A pattern is reliable if it's reliability score is more than a threshold
 	 * gamma. The reliability score is determined by formula (1), (2), (3) and
 	 * (4) in the paper.
 	 * 
-	 * @param pattern
-	 *            The pattern to be evaluated
+	 * @param pattern The pattern to be evaluated
 	 * @return true if reliability score for patterns is higher than threshold
 	 *         gamma, else false.
 	 */
-	@SuppressWarnings("unused")
-	private boolean isReliable(String pattern) {
-		return false;
+	public boolean isReliable(String pattern) {
+		double score = rkFinal(pattern);
+		return score > gamma;
 	}
 
 	/**
@@ -28,10 +31,8 @@ public class PatternEvaluation {
 	 * applying pattern pi. If cpj = '*', then the number returned is any
 	 * question containing pattern pi.
 	 * 
-	 * @param pi
-	 *            A reliable pattern that can generate cpj
-	 * @param cpj
-	 *            A set of reliable comparator pairs
+	 * @param pi A reliable pattern that can generate cpj
+	 * @param cpj A set of reliable comparator pairs
 	 * @return The number of questions that pi can extract cpj from
 	 */
 	@SuppressWarnings("unused")
@@ -57,11 +58,8 @@ public class PatternEvaluation {
 	 * Support is defined as the support S for comparator pair cpi_roof which
 	 * can be extracted by P_roof^k and does not exist in the current reliable
 	 * set.
-	 * 
-	 * @param pk_roof
-	 *            A candidate pattern which can extract cpi_roof
-	 * @param cpi_roof
-	 *            The comparator pair which can be extracted by pk_roof and does
+	 * @param pk_roof A candidate pattern which can extract cpi_roof
+	 * @param cpi_roof The comparator pair which can be extracted by pk_roof and does
 	 *            not exist in {@link #reliablePairRepository}
 	 * @return The support count for pattern p given the definition above
 	 */
@@ -92,19 +90,45 @@ public class PatternEvaluation {
 	 *            The pattern for which the reliability score will be generated
 	 * @return The reliability score for pattern pi
 	 */
-	@SuppressWarnings("unused")
-	private double rkpi(String pi) {
+	private double rk(String pi) {
 		int cpiExtract = 0;
 		int patternContains = 0;
-		for (String q : questionSet) {
-			String cpj = null;// = extract(pi, q);
-			cpiExtract += nq(pi, cpj);
-			if (q.contains(pi)) {
+		for (@SuppressWarnings("unused") Pair<String, String> p : reliablePairRepository) {
+			//If p can be extracted by pi {
+				cpiExtract++;
+		}
+		for(String q : questionSet) {
+			if(q.contains(pi)) {
 				patternContains++;
 			}
 		}
 		double score = (double) cpiExtract / (double) patternContains;
 		return score;
 	}
-
+	
+	/**
+	 * Using likely reliable pairs, lookahead reliability score R^(pi) is defined
+	 * as (3) in the paper. 
+	 * @param pi The candidate pattern to be evaluated
+	 * @return The lookahead reliability score for pattern <tt>pi</tt>
+	 */
+	private double rkRoof(String pi) {	
+		int cpiRoofExtract = 0;
+		int patternContains = 0;
+		return alpha;
+	}
+	
+	/**
+	 * By interpolating (1) (= {@link #rk(String)}) and (3) (= {@link #rkRoof(String)}), the final reliability score
+	 * rkPi for a pattern is defined as below. 
+	 * @param pi A candidate pattern
+	 * @return Pattern <tt>pi</tt>'s reliability score
+	 */
+	private double rkFinal(String pi) {
+		double first = lambda * rk(pi);
+		double second = (1 - lambda) * rkRoof(pi);
+		return first + second;
+	}
+	
+	
 }
