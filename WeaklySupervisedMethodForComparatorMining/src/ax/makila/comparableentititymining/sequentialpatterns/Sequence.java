@@ -1,29 +1,21 @@
 package ax.makila.comparableentititymining.sequentialpatterns;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import ax.makila.comparableentititymining.postagger.CompTaggedWord;
 import ax.makila.comparableentititymining.postagger.StanfordPosTagger;
-import edu.stanford.nlp.ling.TaggedWord;
 
 public class Sequence implements SequentialPattern {
 
 	public String sequence = null;
-	public List<String> tokenizedSequence = new ArrayList<String>();
-	public List<TaggedWord> posTags = new ArrayList<TaggedWord>();
-	public List<ArrayList<TaggedWord>> taggedWords = null;
+	public List<List<CompTaggedWord>> taggedWords = null;
 
 	public Sequence(String seq) {
 		sequence = seq;
-		List<List<String>> tokens = StanfordPosTagger.tokenizeStringMergeComp(sequence);
-		for(List<String> token : tokens) {
-			tokenizedSequence.addAll(token);
-		}
-		List<ArrayList<TaggedWord>> taggedWords = StanfordPosTagger.tagStringHandleIdentifier(sequence);
-		for(List<TaggedWord> pos : taggedWords) {
-			posTags.addAll(pos);
-		}
+		//List<List<String>> tokens = StanfordPosTagger.tokenizeStringMergeComp(sequence);
+		//taggedWords = StanfordPosTagger.tagStringHandleIdentifier(sequence);
 	}
+	
 
 	@Override
 	public boolean equals(Object other) {
@@ -50,25 +42,16 @@ public class Sequence implements SequentialPattern {
 		return false;
 	}
 
+	
 	@Override
-	public List<TaggedWord> getPosTags() {
-		return posTags;
-	}
-
-	@Override
-	public List<String> getTokenizedSequence() {
-		return tokenizedSequence;
-	}
-
-	@Override
-	public void setPosTags(List<TaggedWord> posTags) {
-		this.posTags = posTags;
-		
-	}
-
-	@Override
-	public List<ArrayList<TaggedWord>> getTaggedWords() {
+	public List<List<CompTaggedWord>> getTaggedWords() {
 		return taggedWords;
+	}
+
+
+	@Override
+	public void setTaggedWords(String sequence) {
+		taggedWords = StanfordPosTagger.tagStringHandleIdentifier(sequence);
 	}
 
 }
