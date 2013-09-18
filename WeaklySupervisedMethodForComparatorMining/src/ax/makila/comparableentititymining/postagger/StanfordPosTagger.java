@@ -56,7 +56,7 @@ public class StanfordPosTagger {
 				TaggedWord tagged = new TaggedWord("#end");
 				tagged.setTag("#");
 				tagged.setValue("#end");
-				word.add(word.size(), tagged);
+				word.add(tagged);
 			}
 		}
 		
@@ -124,13 +124,19 @@ public class StanfordPosTagger {
 	}
 	
 	/**
-	 * Tokenizes the string and merge $ and c to $c 
+	 * Tokenizes the string and merge $ and c to $c. Adds #start and #end to each sentence. 
 	 * @param question The question to be tokenized
 	 * @return The tokenized question
 	 */
 	public static List<List<String>> tokenizeStringMergeComp(String question) {
 		List<List<String>> tokens = tokenizeString(question);
 		for(List<String> token : tokens) {
+			if(!token.get(0).equals("#start")) {
+				token.add(0, "#start");
+			}
+			if(!token.get(token.size() - 1).equals("#end")) {
+				token.add("#end");
+			}
 			ListIterator<String> it = token.listIterator();
 			while(it.hasNext()) {
 				String t = it.next();
@@ -147,8 +153,6 @@ public class StanfordPosTagger {
 					}
 				}
 			}
-			
-			
 		}
 		return tokens;
 	}
