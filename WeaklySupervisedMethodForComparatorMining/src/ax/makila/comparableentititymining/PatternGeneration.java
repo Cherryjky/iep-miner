@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import ax.makila.comparableentititymining.postagger.CompTaggedWord;
 import ax.makila.comparableentititymining.sequentialpatterns.SequentialPattern;
 import ax.makila.comparableentititymining.sequentialpatterns.patterns.GeneralizedSequence;
 import ax.makila.comparableentititymining.sequentialpatterns.patterns.LexicalSequence;
@@ -23,7 +24,7 @@ public class PatternGeneration {
 	public static List<String> mineGoodPatterns(
 			List<String> seedComparatorPairs,
 			List<String> comparativeQuestionSet) {
-		
+
 		for (String question : comparativeQuestionSet) {
 			/*
 			 * String surfacePattern = surfaceTextPatternMining(question)
@@ -37,6 +38,7 @@ public class PatternGeneration {
 				lexicalPatterns, generalizedPatterns);
 		System.out.println(specializedPatterns.size());
 
+		//Do some fancy pattern eval
 		return null;
 	}
 
@@ -70,7 +72,7 @@ public class PatternGeneration {
 		}
 		return lexicalPatterns; 
 	}
-	
+
 	/**
 	 * A pattern is only kept if it's frequency in the collection <tt>questionSet</tt>
 	 * exceeds a threshold limit <tt>beta</tt>. 
@@ -105,45 +107,46 @@ public class PatternGeneration {
 		System.out.println("Lexical pattern size = " + lexPatterns.size());
 		Set<SequentialPattern> generalizedPatterns = new HashSet<SequentialPattern>();
 		for(SequentialPattern sequence : lexPatterns) {
-			List<TaggedWord> taggedSequence = sequence.getPosTags();
-			System.out.println("Sequence length = " + taggedSequence.size());
-			//Checks if the string starts or ends with #start or #end
-			int start = 0;
-			int end = 0;
-			if(taggedSequence.get(0).tag().equals("#")) {
-				start = 1;
-			}
-			else if(taggedSequence.get(taggedSequence.size() - 1).tag().equals("#")) {
-				end = 1;
-			}
-			//Sets a max limit to reduce the processing time
-			int numBits = Math.min(taggedSequence.size(), 12);
-			int max = (int) Math.pow(2, numBits - start - 1);
-			for(int i = 1 + start; i <= max; i += 1 + end) {
-				String format = "%" + numBits + "s";
-				String bin = String.format(format, Integer.toBinaryString(i))
-						.replace(' ', '0');
-				char[] binary = bin.toCharArray();
-				//A 1 in the binary array tells us that the word in that location
-				//in the sequence should be replaced by its pos tag
-				StringBuilder sb = new StringBuilder();
-				for(int j = 0; j < binary.length; j++) {
-					TaggedWord replace = taggedSequence.get(j);
-					if(binary[j] == '1') {
-						//Ignore comparators
-						if(!replace.value().equals("$c")) {
-							sb.append(replace.tag());
-						}
-						else {
-							sb.append(replace.value());
-						}
-						sb.append(" ");
-					}
+			List<List<CompTaggedWord>> taggedSequence = sequence.getTaggedWords();
+			for(List<CompTaggedWord> comp : taggedSequence) {
+				System.out.println("Sequence length = " + comp.size());
+				//Checks if the string starts or ends with #start or #end
+				int start = 0;
+				int end = 0;
+				if(comp.get(0).tag().equals("#")) {
+					start = 1;
 				}
-				String s = PTBTokenizer.ptb2Text(sb.toString());
-				SequentialPattern seqPattern = new GeneralizedSequence(s);
-				seqPattern.setPosTags(taggedSequence);
-				generalizedPatterns.add(seqPattern);
+				else if(comp.get(taggedSequence.size() - 1).tag().equals("#")) {
+					end = 1;
+				}
+				//Sets a max limit to reduce the processing time
+				int numBits = Math.min(taggedSequence.size(), 12);
+				int max = (int) Math.pow(2, numBits - start - 1);
+				for(int i = 1 + start; i <= max; i += 1 + end) {
+					String format = "%" + numBits + "s";
+					String bin = String.format(format, Integer.toBinaryString(i))
+							.replace(' ', '0');
+					char[] binary = bin.toCharArray();
+					//A 1 in the binary array tells us that the word in that location
+					//in the sequence should be replaced by its pos tag
+					StringBuilder sb = new StringBuilder();
+					for(int j = 0; j < binary.length; j++) {
+						CompTaggedWord replace = comp.get(j);
+						if(binary[j] == '1') {
+							//Ignore comparators
+							if(!replace.value().equals("$c")) {
+								sb.append(replace.tag());
+							}
+							else {
+								sb.append(replace.value());
+							}
+							sb.append(" ");
+						}
+					}
+					String s = PTBTokenizer.ptb2Text(sb.toString());
+					SequentialPattern seqPattern = new GeneralizedSequence(s);
+					generalizedPatterns.add(seqPattern);
+				}
 			}
 		}
 		return generalizedPatterns;
@@ -172,21 +175,24 @@ public class PatternGeneration {
 		Set<SequentialPattern> specializedPatterns = new HashSet<SequentialPattern>();
 		for (int i = 0; i < combinedPatterns.size(); i++) {
 			SequentialPattern pattern = combinedPatterns.get(i);
-			List<TaggedWord> tokens = pattern.getPosTags();
-			StringBuilder sb = new StringBuilder();
-			for(TaggedWord tag : tokens) {
-				if(tag.value().contains("$c")) {
-					sb.append(tag.tag());
+			List<List<CompTaggedWord>> tokens = pattern.getTaggedWords();
+			for(List<CompTaggedWord> list : tokens) {
+				StringBuilder sb = new StringBuilder();
+				for(CompTaggedWord tag : list) {
+					if(tag.value().contains("$c")) {
+						sb.append(tag.tag());
+					}
+					else {
+						sb.append(tag.value());
+					}
+					sb.append(" ");
 				}
-				else {
-					sb.append(tag.value());
-				}
-				sb.append(" ");
+				String sequence = PTBTokenizer.ptb2Text(sb.toString());
+				SequentialPattern seq = new SpecializedSequence(sequence);
+				specializedPatterns.add(seq);
 			}
-		String sequence = PTBTokenizer.ptb2Text(sb.toString());
-		SequentialPattern seq = new SpecializedSequence(sequence);
-		specializedPatterns.add(seq);
 		}
 		return specializedPatterns;
 	}
+
 }
