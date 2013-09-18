@@ -130,7 +130,7 @@ public class StanfordPosTaggerTest {
 	@Test
 	public void testTokenizeStringMergeComp() {
 		String testString = "Hey $c what are you doing?";
-		String[] testArr = {"Hey", "$c", "what", "are", "you", "doing", "?"};
+		String[] testArr = {"#start", "Hey", "$c", "what", "are", "you", "doing", "?", "#end"};
 		
 		List<List<String>> list = StanfordPosTagger.tokenizeStringMergeComp(testString);
 		assertTrue(list.size() == 1);
