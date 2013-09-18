@@ -7,6 +7,7 @@ import java.util.ListIterator;
 
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.ling.TaggedWord;
+import edu.stanford.nlp.process.PTBTokenizer;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 
 public class StanfordPosTagger {
@@ -155,6 +156,24 @@ public class StanfordPosTagger {
 			}
 		}
 		return tokens;
+	}
+	
+	/**
+	 * Returns a string representation of the tokenized input <tt>list</tt>.
+	 * @param list A tokenized list of sentences and words
+	 * @return A String representation of the tokenized list
+	 */
+	public static String tokensToString(List<List<String>> list) {
+		StringBuilder sb = new StringBuilder();
+		for(List<String> innerList : list) {
+			for(String token : innerList) {
+				sb.append(token);
+				sb.append(" ");
+			}
+		}
+		
+		String string = PTBTokenizer.ptb2Text(sb.toString().trim());
+		return string;
 	}
 
 	

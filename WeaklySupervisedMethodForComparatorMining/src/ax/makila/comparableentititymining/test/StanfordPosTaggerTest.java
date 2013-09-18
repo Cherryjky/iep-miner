@@ -138,5 +138,25 @@ public class StanfordPosTaggerTest {
 		List<String> l = list.get(0);
 		assertEquals(l, Arrays.asList(testArr));
 	}
+	
+	@Test
+	public void testTokensToString() {
+		String testString = "Hey $c what are you doing?";
+		String expectedOutput = "#start Hey $c what are you doing? #end";
+		
+		List<List<String>> list = StanfordPosTagger.tokenizeStringMergeComp(testString);
+		String output = StanfordPosTagger.tokensToString(list);
+
+		assertEquals(output, expectedOutput);
+		
+		String anotherString = "Hey! My name is $c! What are you doing?";
+		String anotherExpected = "#start Hey! #end #start My name is $c! #end #start What are you doing? #end";
+		
+		List<List<String>> list2 = StanfordPosTagger.tokenizeStringMergeComp(anotherString);
+		String output2 = StanfordPosTagger.tokensToString(list2);
+
+		assertEquals(output2, anotherExpected);
+		
+	}
 
 }
