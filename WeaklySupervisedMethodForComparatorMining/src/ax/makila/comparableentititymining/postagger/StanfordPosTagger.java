@@ -175,6 +175,27 @@ public class StanfordPosTagger {
 		String string = PTBTokenizer.ptb2Text(sb.toString().trim());
 		return string;
 	}
+	
+	/**
+	 * Returns a sequence representation of the tokenized input <tt>list</tt>.
+	 * @param list A tokenized list of sentences and words
+	 * @return A String representation of the tokenized list
+	 */
+	public static List<String> tokensToSequence(List<List<String>> list) {
+		List<String> output = new ArrayList<String>();
+		for(List<String> innerList : list) {
+			StringBuilder sb = new StringBuilder();
+			for(String token : innerList) {
+				sb.append(token);
+				sb.append(" ");
+			}
+			String string = PTBTokenizer.ptb2Text(sb.toString().trim());
+			output.add(string);
+		}
+		
+		return output;
+	}
+
 
 	
 	
