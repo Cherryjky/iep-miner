@@ -184,7 +184,12 @@ public class MiningIndicativeExtractionPatterns {
 			for(Pair<CompTaggedWord, CompTaggedWord> pair : pairs) {
 				CompTaggedWord firstWord = pair.x;
 				CompTaggedWord secondWord = pair.y;
-				if(q.text().contains(firstWord.value()) && q.text().contains(secondWord.value())) {
+				String text = q.text();
+				if(text.contains(firstWord.value()) && text.contains(secondWord.value())) {
+					//TODO: Figure out how to handle comparators for new comparative questions found
+					int index0 = text.indexOf(firstWord.value());
+					int index1 = text.indexOf(secondWord.value());
+
 					comparativeQuestions.add(q);
 				}
 			}
@@ -262,7 +267,7 @@ public class MiningIndicativeExtractionPatterns {
 					comparativeQuestionSet.remove(i);
 				}
 			}
-			newPatterns = PatternGeneration.mineGoodPatterns(pairs, questions);
+			newPatterns = PatternGeneration.mineGoodPatterns(pairs, comparativeQuestionSet);
 			/*//newComparatorPairs.clear();
 			for (String q : questionArchive) {
 				List<String> comparatorPairs = extractComparableComparators(
