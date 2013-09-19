@@ -12,6 +12,9 @@ public class Sequence implements SequentialPattern {
 
 	private List<String> sequence;
 	private String toString;
+	private final List<List<String>> tokenizedComparatorSequences = new ArrayList<List<String>>();
+	private List<String> comparatorReplacedSequence;
+	private String comparatorReplaced;
 	private List<List<CompTaggedWord>> taggedWords;
 	private final String text;
 	private List<List<String>> tokens;
@@ -95,6 +98,18 @@ public class Sequence implements SequentialPattern {
 		CompTaggedWord tagged2 = comp.get(secondIndex);
 		tagged2.setCompTag(CompTaggedWord.COMP_TAG);
 		comp.set(secondIndex, tagged2);
+
+		List<String> replaced = new ArrayList<String>();
+		for(CompTaggedWord word : comp) {
+			if(word.getCompTag() != null) {
+				replaced.add("$c");
+			}
+			else {
+				replaced.add(word.value());
+			}
+		}
+		tokenizedComparatorSequences.add(replaced);
+
 		Pair<CompTaggedWord, CompTaggedWord> pair = new Pair<CompTaggedWord,CompTaggedWord>(candidates.get(0).x, candidates.get(1).x);
 		return pair;
 	}
@@ -107,7 +122,19 @@ public class Sequence implements SequentialPattern {
 				pairs.add(pair);
 			}
 		}
+		comparatorReplacedSequence = StanfordPosTagger.tokensToSequence(tokenizedComparatorSequences);
+
+		comparatorReplaced = StanfordPosTagger.tokensToString(tokenizedComparatorSequences);
 		return pairs;
+	}
+	@Override
+	public List<String> getReplacedComparatorSequence() {
+		return comparatorReplacedSequence;
+	}
+
+	@Override
+	public String getReplacedComparatorText() {
+		return comparatorReplaced;
 	}
 
 	@Override
@@ -129,25 +156,26 @@ public class Sequence implements SequentialPattern {
 		return taggedWords;
 	}
 
+
 	@Override
 	public List<String> getTokenizedVersion() {
 		return tokenized;
 	}
 
-
 	@Override
 	public boolean isGeneralized() {
 		return false;
 	}
-
 	@Override
 	public boolean isLexical() {
 		return false;
 	}
+
 	@Override
 	public boolean isSpecialized() {
 		return false;
 	}
+
 
 	@Override
 	public boolean matches(SequentialPattern pattern) {
@@ -158,7 +186,6 @@ public class Sequence implements SequentialPattern {
 		}
 		return false;
 	}
-
 
 	private boolean matchesInner(SequentialPattern pattern, List<CompTaggedWord> comp) {
 		List<String> tokenized = pattern.getTokenizedVersion();
@@ -267,6 +294,15 @@ public class Sequence implements SequentialPattern {
 		toString = StanfordPosTagger.tokensToString(tokens);
 		sequence = StanfordPosTagger.tokensToSequence(tokens);
 		taggedWords = StanfordPosTagger.tagStringHandleIdentifier(text);
+
+	}
+
+	public void setComparatorReplaced(List<String> replacedComparators) {
+		List<List<String>> temp = new ArrayList<List<String>>();
+		temp.add(replacedComparators);
+		String text = StanfordPosTagger.tokensToString(temp);
+		List<List<String>> tokens = StanfordPosTagger.tokenizeStringMergeComp(text);
+		comparatorReplacedSequence = StanfordPosTagger.tokensToSequence(tokens);
 	}
 
 	@Override
@@ -289,5 +325,7 @@ public class Sequence implements SequentialPattern {
 		}
 		return toString;
 	}
+
+
 
 }

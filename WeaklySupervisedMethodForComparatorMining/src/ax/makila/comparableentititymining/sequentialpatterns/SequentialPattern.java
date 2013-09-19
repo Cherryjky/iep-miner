@@ -5,6 +5,10 @@ import java.util.List;
 import ax.makila.comparableentititymining.postagger.CompTaggedWord;
 
 public interface SequentialPattern {
+	public List<String> getReplacedComparatorSequence();
+
+	public String getReplacedComparatorText();
+
 	public List<String> getSequence();
 
 	public List<List<CompTaggedWord>> getTaggedWords();
