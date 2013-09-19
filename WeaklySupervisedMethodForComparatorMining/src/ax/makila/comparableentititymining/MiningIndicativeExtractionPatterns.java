@@ -1,14 +1,14 @@
 package ax.makila.comparableentititymining;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.regex.Pattern;
 
-import ax.makila.comparableentititymining.postagger.StanfordPosTagger;
-import ax.makila.comparableentititymining.postagger.StanfordPosTagger.PosTag;
-import edu.stanford.nlp.ling.TaggedWord;
+import ax.makila.comparableentititymining.postagger.CompTaggedWord;
+import ax.makila.comparableentititymining.sequentialpatterns.Sequence;
+import ax.makila.comparableentititymining.sequentialpatterns.SequentialPattern;
+import ax.makila.comparableentititymining.sequentialpatterns.patterns.SpecializedSequence;
 
 public class MiningIndicativeExtractionPatterns {
 	// alpha, beta, gamma, lambda parameters are determined empirically
@@ -28,119 +28,123 @@ public class MiningIndicativeExtractionPatterns {
 	 * an interpolation parameter in (4) (see paper)
 	 */
 	public static final double lambda = 0.5;
-	// Comparator token
+	/**
+	 * Comparator token
+	 */
 	public static final String comparator = "$c";
-	// Start token
+	/**
+	 * Start of sentence token
+	 */
 	public static final String start = "#start";
-	// end token
+	/**
+	 * End of sentence token
+	 */
 	public static final String end = "#end";
 	/**
 	 * Contains all the questions for mining
 	 */
 	public static final String[] yahooAnswers = {
-			// comparable questions x 19
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start Is it better to be unhealthy and happy $c or good looking and stressed $c? #end",
-			"#start are there more delicious chocolate in cookies or in old car batteris? #end",
-			"#start What is better national guard or reserve? #end",
-			"#start What is the better dog food pedigree or eukanuba? #end",
-			"#start What do you prefer short boots or long boots for riding and why? #end",
-			"#start Why are games on iPhone better than Android? #end",
-			"#start What airline is better for traveling to south america american airlines or continental? #end",
-			"#start What book is better, Maximum ride the angel experiment or maximum ride schools out forever? #end",
-			"#start Which Burberry face of the year do you prefer, Rosie Huntington or Emma Watson? #end",
-			"#start Madrid vs. Barcelona: Which city is better to shop for designer brands? #end",
-			"#start London vs. Paris: Which city is better(cheaper) for shopping? #end",
-			"#start In the world, which is better 'sheeple' or 'goats'? (see details please)? #end",
-			"#start Do you prefer Old Spice or Axe? #end",
-			"#start Green vs pink? #end",
-			"#start Heaven vs hell? #end",
-			"#start Catapult vs ballista? #end",
-			"#start Pasta vs pizza? #end",
-			"#start Sonic vs Mario? #end",
-			"#start $c vs $c? #end",
-			"#start $c vs $c? #end",
-			"#start $c vs $c? #end",
-			"#start $c vs $c? #end",
-			"#start $c vs $c? #end",
-			"#start $c vs $c? #end",
-			"#start $c vs $c? #end",
-			"#start $c vs $c? #end",
-			"#start $c vs $c? #end",
-			"#start $c vs $c? #end",
-			"#start $c vs $c? #end",
-			"#start $c vs $c? #end",
-			"#start $c vs $c? #end",
-			"#start $c vs $c? #end",
-			"#start $c vs $c? #end",
-			"#start $c vs $c? #end",
-			"#start $c vs $c? #end",
-			"#start $c vs $c? #end",
-			"#start $c vs $c? #end",
-			"#start $c vs $c? #end",
-			"#start iPhone vs Galaxy? #end",
-			"#start Which City Is Better, NYC or Paris? #end",
-			// Non-comparable questions x 18
-			"#start How to convince my parents to buy me a iphone or samsung galaxy s4? #end",
-			"#start Can I buy an iPhone at the apple store and then use it for cricket? #end",
-			"#start What kind of car is a total chick magnet? #end",
-			"#start Is the 1998 trail blazer 4x4? #end",
-			"#start What's a good anime to watch? #end",
-			"#start Does it affect you big time if you don't pass the CAHSEE exam the 1st time? #end",
-			"#start Whats the used value on a jackson SLAT3-7 guitar? #end",
-			"#start Merger of Cooperative bank into nationalized bank? #end",
-			"#start Is there a laser dome in or around NJ? #end",
-			"#start how can I return me deleted emails? #end",
-			"#start Anne Bradstreet's poetry? PLEASE in need of HELP? #end",
-			"#start White specks in stool, should I be concerned? #end",
-			"#start I believe I've seen death and god through pot? #end",
-			"#start I'm really tired and I need some time managment/ staying up tips please help!? #end",
-			"#start I have lots of lung mucus! Going on for 3 months now!? #end",
-			"#start is muscle confusion a good topic for a research paper on mma? #end",
-			"#start Is Social Security an outdated form of social welfare? Is it time to just mandate people to save at banks? #end",
-			"#start What does it mean when a guy doesn't text you back? #end" };
-	/**
-	 * A list representation of the yahoo answers questions.
-	 */
-	List<String> questionArchive = Arrays.asList(yahooAnswers);
+		// comparable questions x 19
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"are there more delicious chocolate in cookies or in old car batteris",
+		"What is better national guard or reserve?",
+		"What is the better dog food pedigree or eukanuba?",
+		"What do you prefer short boots or long boots for riding and why?",
+		"Why are games on iPhone better than Android?",
+		"What airline is better for traveling to south america american airlines or continental?",
+		"What book is better, Maximum ride the angel experiment or maximum ride schools out forever?",
+		"Which Burberry face of the year do you prefer, Rosie Huntington or Emma Watson?",
+		"Madrid vs. Barcelona: Which city is better to shop for designer brands?",
+		"London vs. Paris: Which city is better(cheaper) for shopping?",
+		"In the world, which is better 'sheeple' or 'goats'? (see details please)?",
+		"Do you prefer Old Spice or Axe?",
+		"Green vs pink?",
+		"Heaven vs hell?",
+		"Catapult vs ballista?",
+		"Pasta vs pizza?",
+		"Sonic vs Mario?",
+		"cats vs dogs?",
+		"sega vs nintendo?",
+		"nike vs adidas?",
+		"google vs yahoo?",
+		"samsung vs apple?",
+		"bamboo vs oak?",
+		"hot vs cold?",
+		"old vs young?",
+		"$c vs $c?",
+		"new vs second-hand?",
+		"water vs coffee?",
+		"pikachu vs charizard?",
+		"pikachu vs bulbasaur?",
+		"Enemies vs friends?",
+		"Cool vs hot?",
+		"derp vs herp?",
+		"sheeps vs cows?",
+		"sonic vs knuckles?",
+		"sonic vs mario?",
+		"android vs ios?",
+		"Is that really a fight of cats vs dogs?",
+		"iPhone vs Galaxy?",
+		"Which City Is Better, NYC or Paris?",
+		// Non-comparable questions x 18
+		"How to convince my parents to buy me a iphone or samsung galaxy s4?",
+		"Can I buy an iPhone at the apple store and then use it for cricket?",
+		"What kind of car is a total chick magnet?",
+		"Is the 1998 trail blazer 4x4?",
+		"What's a good anime to watch?",
+		"Does it affect you big time if you don't pass the CAHSEE exam the 1st time?",
+		"Whats the used value on a jackson SLAT3-7 guitar?" ,
+		"Merger of Cooperative bank into nationalized bank?",
+		"Is there a laser dome in or around NJ?",
+		"how can I return me deleted emails?",
+		"Anne Bradstreet's poetry? PLEASE in need of HELP?",
+		"White specks in stool, should I be concerned?",
+		"I believe I've seen death and god through pot?",
+		"I'm really tired and I need some time managment/ staying up tips please help!?",
+		"I have lots of lung mucus! Going on for 3 months now!?",
+		"is muscle confusion a good topic for a research paper on mma?",
+		"Is Social Security an outdated form of social welfare? Is it time to just mandate people to save at banks?",
+	"What does it mean when a guy doesn't text you back?" };
+
 	/**
 	 * The initial IEP to start the bootstrapping method
 	 */
-	static final String initialIEP = "#start $c/NN vs/CC $c/NN?/. #end";
+	//"#start $c/NN vs/CC $c/NN?/. #end"
+	static final SequentialPattern initialIEP = new SpecializedSequence("#start $c/NN vs $c/NN?/. #end");
 
 	/**
 	 * Main method
 	 * 
-	 * @param argsv
-	 *            Input
+	 * @param argsv Input
 	 */
 	public static void main(String argsv[]) {
 		// Used to initiate the bootstrapping
@@ -156,93 +160,9 @@ public class MiningIndicativeExtractionPatterns {
 	 *            The initial seed IEP
 	 */
 	public MiningIndicativeExtractionPatterns() {
-		iepMining();
-	}
-
-	/**
-	 * Does the actual work of extracting IEP through a bootstrapping approach.
-	 * The bootstrapping process starts with a single IEP. From it, we extract a
-	 * set of initial seed comparator pairs. For each comparator pair, all
-	 * questions containing the pair are retrieved from a question collection
-	 * and regarded as comparative questions. From the comparative questions and
-	 * comparator pairs, all possible sequential patterns are generated and
-	 * evaluated by measuring their reliability score. Patterns evaluated as
-	 * reliable ones are IEPs and are added into an IEP repository. Then, new
-	 * comparator pairs are extracted from the collection using the latest IEPs.
-	 * The new comparators are added to a reliable comparator repository and
-	 * used as new seeds for pattern learning in the next iteration. All
-	 * questions from which reliable comparators are extracted are removed from
-	 * the collection to allow finding new patters efficiently in later
-	 * iterations. The process iterates until no more new patterns can be found
-	 * from the questions collection. The method has two key steps:
-	 * <ol>
-	 * <li>Pattern generation
-	 * <li>Pattern extraction
-	 * </ol>
-	 * 
-	 * @return A list of reliable IEP.
-	 */
-	private List<String> iepMining() {
-		System.out.println("Start");
-		//Get seed comparator pairs
-		//List<Pair<String, String>> seedComparatorPairs = extractSeedComparators(initialIEP, questionArchive);
-		//List<Pair<String, String>> newComparatorPairs = new ArrayList<Pair<String, String>>(seedComparatorPairs);
-		//Contains the patterns generated during each iteration
-		List<String> newPatterns = new ArrayList<String>();
-		//All the questions identified as comparative
-		List<String> comparativeQuestionSet = new ArrayList<String>();
-		//All patterns gathered from the previous iteration
-		List<String> iep = new ArrayList<String>();
-		do {
-			iep.addAll(newPatterns);
-			// List<String> newComparativeQuestions =
-			// comparativeQuestionIdentify(seedComparatorPairs,
-			// questionArchive);
-			// comparativeQuestionSet.addAll(newComparativeQuestions);
-			for (int i = 0; i < questionArchive.size(); i++) {
-				if (isMatchingPatterns(iep, questionArchive.get(i))) {
-					comparativeQuestionSet.remove(i);
-				}
-			}
-			// newPatterns =
-			PatternGeneration.mineGoodPatterns(null, questionArchive);
-			/*//newComparatorPairs.clear();
-			for (String q : questionArchive) {
-				List<String> comparatorPairs = extractComparableComparators(
-						iep, q);
-				if (comparatorPairs != null&& newComparatorPairs.containsAll(comparatorPairs)) {
-					// seedComparatorPairs.addAll(comparatorPairs);
-				}
-			}
-		*/
-		} while (newPatterns.size() != 0);
-		return iep;
-	}
-
-	@SuppressWarnings("unused")
-	private List<String> extractComparableComparators(List<String> iep, String q) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/**
-	 * For a given question, return true if the question matches any pattern in
-	 * iep, else false.
-	 * 
-	 * @param iep
-	 *            A list of extracted IEP patterns
-	 * @param q
-	 *            A question that is compared with the IEPs
-	 * @return True if question matches pattern, else false.
-	 */
-	private boolean isMatchingPatterns(List<String> iep, String q) {
-		for (String p : iep) {
-			if (q.matches(p)) {
-				return true;
-			}
-		}
-
-		return false;
+		List<Sequence> questions = preProcessQuestions(yahooAnswers);
+		extractSeedComparators(initialIEP, questions);
+		iepMining(questions);
 	}
 
 	/**
@@ -273,6 +193,12 @@ public class MiningIndicativeExtractionPatterns {
 		return comparativeQuestions;
 	}
 
+	@SuppressWarnings("unused")
+	private List<String> extractComparableComparators(List<String> iep, String q) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	/**
 	 * Given an initial IEP used for bootstrapping it iterates over all of the
 	 * questions and try to match the IEP to the question. If it matches,
@@ -282,30 +208,99 @@ public class MiningIndicativeExtractionPatterns {
 	 * @param questions
 	 * @return A list containing comparator pairs extracted from the sentence
 	 */
-	@SuppressWarnings("unused")
-	private List<Pair<String, String>> extractSeedComparators(
-			String bootstrappingIEP, List<String> questions) {
-		for (String q : questions) {
-			PosTag posTag = StanfordPosTagger.posTagString(q);
+	private List<Pair<CompTaggedWord, CompTaggedWord>> extractSeedComparators(
+			SequentialPattern bootstrappingIEP, List<Sequence> questions) {
+		List<Pair<CompTaggedWord, CompTaggedWord>> pairs = new ArrayList<Pair<CompTaggedWord,CompTaggedWord>>();
+		//TODO: Remember to do phrase chunking for specialized and generalized patterns!!!
+		for (Sequence q : questions) {
+			if(q.matches(bootstrappingIEP)) {
+				pairs.addAll(q.getPairs(bootstrappingIEP));
+			}
 		}
-		/*
-		 * if(bootstrappingIEP.isLexical()) { List<List<String>> sequences = new
-		 * ArrayList<List<String>>(); for(String q : questions) {
-		 * List<List<String>> tokenized = StanfordPosTagger.tokenizedString(q);
-		 * for(List<String> sentence : tokenized) { sequences.add(sentence); } }
-		 * } else { List<Sequence> lexPat =
-		 * PatternGeneration.generateLexicalPatterns(questions); List<Sequence>
-		 * genPat = PatternGeneration.generateGeneralizedPatterns(lexPat);
-		 * for(Sequence seq : genPat) { List<List<String>> tokenized =
-		 * StanfordPosTagger.tokenizedString(seq.toString()); for(List<String>
-		 * sentence : tokenized) { if(sentence.equals(bootstrappingIEP)) { } } }
-		 * }
-		 */
-		return null;
+		return pairs;
+	}
+
+	/**
+	 * Does the actual work of extracting IEP through a bootstrapping approach.
+	 * The bootstrapping process starts with a single IEP. From it, we extract a
+	 * set of initial seed comparator pairs. For each comparator pair, all
+	 * questions containing the pair are retrieved from a question collection
+	 * and regarded as comparative questions. From the comparative questions and
+	 * comparator pairs, all possible sequential patterns are generated and
+	 * evaluated by measuring their reliability score. Patterns evaluated as
+	 * reliable ones are IEPs and are added into an IEP repository. Then, new
+	 * comparator pairs are extracted from the collection using the latest IEPs.
+	 * The new comparators are added to a reliable comparator repository and
+	 * used as new seeds for pattern learning in the next iteration. All
+	 * questions from which reliable comparators are extracted are removed from
+	 * the collection to allow finding new patters efficiently in later
+	 * iterations. The process iterates until no more new patterns can be found
+	 * from the questions collection. The method has two key steps:
+	 * <ol>
+	 * <li>Pattern generation
+	 * <li>Pattern extraction
+	 * </ol>
+	 * 
+	 * @return A list of reliable IEP.
+	 */
+	private List<String> iepMining(List<Sequence> questions) {
+		System.out.println("Start");
+		//Get seed comparator pairs
+		//List<Pair<String, String>> seedComparatorPairs = extractSeedComparators(initialIEP, questionArchive);
+		//List<Pair<String, String>> newComparatorPairs = new ArrayList<Pair<String, String>>(seedComparatorPairs);
+		//Contains the patterns generated during each iteration
+		List<String> newPatterns = new ArrayList<String>();
+		//All the questions identified as comparative
+		List<String> comparativeQuestionSet = new ArrayList<String>();
+		//All patterns gathered from the previous iteration
+		List<String> iep = new ArrayList<String>();
+		do {
+			iep.addAll(newPatterns);
+			// List<String> newComparativeQuestions =
+			// comparativeQuestionIdentify(seedComparatorPairs,
+			// questionArchive);
+			// comparativeQuestionSet.addAll(newComparativeQuestions);
+			for (int i = 0; i < questions.size(); i++) {
+				if (isMatchingPatterns(iep, questions.get(i))) {
+					comparativeQuestionSet.remove(i);
+				}
+			}
+			// newPatterns =
+			PatternGeneration.mineGoodPatterns(null, questions);
+			/*//newComparatorPairs.clear();
+			for (String q : questionArchive) {
+				List<String> comparatorPairs = extractComparableComparators(
+						iep, q);
+				if (comparatorPairs != null&& newComparatorPairs.containsAll(comparatorPairs)) {
+					// seedComparatorPairs.addAll(comparatorPairs);
+				}
+			}
+			 */
+		} while (newPatterns.size() != 0);
+		return iep;
+	}
+
+	/**
+	 * For a given question, return true if the question matches any pattern in
+	 * iep, else false.
+	 * 
+	 * @param iep
+	 *            A list of extracted IEP patterns
+	 * @param q
+	 *            A question that is compared with the IEPs
+	 * @return True if question matches pattern, else false.
+	 */
+	private boolean isMatchingPatterns(List<String> iep, Sequence q) {
+		for (String p : iep) {
+			if (q.text().matches(p)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@SuppressWarnings("unused")
-	private String phraseChunker(PosTag pattern) {
+	private String phraseChunker(Sequence pattern) {
 		/*
 		 * Heuristic rules NP* -> NP NN* -> NN NN + NNS -> NNS NP + NPS -> NPS
 		 * More + ADJ -> JJR Most + ADJ -> JJS ...
@@ -325,12 +320,12 @@ public class MiningIndicativeExtractionPatterns {
 		Pattern rule6a = Pattern.compile("most");
 		Pattern rule6b = Pattern.compile("JJ\\S");
 
-		List<ArrayList<TaggedWord>> tagged = pattern.taggedWords;
+		List<List<CompTaggedWord>> tagged = pattern.getTaggedWords();
 		StringBuilder sb = new StringBuilder();
-		for (ArrayList<TaggedWord> list : tagged) {
-			ListIterator<TaggedWord> tokens = list.listIterator();
+		for (List<CompTaggedWord> list : tagged) {
+			ListIterator<CompTaggedWord> tokens = list.listIterator();
 			while (tokens.hasNext()) {
-				TaggedWord word = tokens.next();
+				CompTaggedWord word = tokens.next();
 				// Rule 1
 				if (word.tag().matches(rule1.pattern())) {
 					word.setTag("NP");
@@ -342,11 +337,11 @@ public class MiningIndicativeExtractionPatterns {
 				// Rule 3
 				else if (word.tag().matches(rule3a.pattern())
 						&& tokens.hasNext()) {
-					TaggedWord nextWord = tokens.next(); // Peek ahead
+					CompTaggedWord nextWord = tokens.next(); // Peek ahead
 					if (nextWord.tag().matches(rule3b.pattern())) {
 						tokens.remove();
-						TaggedWord current = tokens.previous(); // Move back
-																// again
+						CompTaggedWord current = tokens.previous(); // Move back
+						// again
 						current.setValue(current.value() + " "
 								+ nextWord.value());
 						current.setTag("NNS");
@@ -357,10 +352,10 @@ public class MiningIndicativeExtractionPatterns {
 				// Rule 4
 				else if (word.tag().matches(rule4a.pattern())
 						&& tokens.hasNext()) {
-					TaggedWord nextWord = tokens.next();
+					CompTaggedWord nextWord = tokens.next();
 					if (nextWord.tag().matches(rule4b.pattern())) {
 						tokens.remove();
-						TaggedWord current = tokens.previous();
+						CompTaggedWord current = tokens.previous();
 						current.setValue(current.value() + " "
 								+ nextWord.value());
 						current.setTag("NPS");
@@ -371,10 +366,10 @@ public class MiningIndicativeExtractionPatterns {
 				// Rule 5
 				else if (word.value().matches(rule5a.pattern())
 						&& tokens.hasNext()) {
-					TaggedWord nextWord = tokens.next();
+					CompTaggedWord nextWord = tokens.next();
 					if (nextWord.tag().matches(rule5b.pattern())) {
 						tokens.remove();
-						TaggedWord current = tokens.previous();
+						CompTaggedWord current = tokens.previous();
 						current.setValue(current.value() + " "
 								+ nextWord.value());
 						current.setTag("JJR");
@@ -385,10 +380,10 @@ public class MiningIndicativeExtractionPatterns {
 				// Rule 6
 				else if (word.value().matches(rule6a.pattern())
 						&& tokens.hasNext()) {
-					TaggedWord nextWord = tokens.next();
+					CompTaggedWord nextWord = tokens.next();
 					if (nextWord.tag().matches(rule6b.pattern())) {
 						tokens.remove();
-						TaggedWord current = tokens.previous();
+						CompTaggedWord current = tokens.previous();
 						current.setValue(current.value() + " "
 								+ nextWord.value());
 						current.setTag("JJS");
@@ -398,10 +393,20 @@ public class MiningIndicativeExtractionPatterns {
 				}
 
 			}
-			pattern.updateStringRepresentation();
+			//pattern.updateStringRepresentation();
 
 		}
 		return pattern.toString();
+	}
+
+	private List<Sequence> preProcessQuestions(String[] questions) {
+		List<Sequence> sequences = new ArrayList<Sequence>();
+		for(String q : questions) {
+			Sequence sequence = new Sequence(q);
+			sequence.set();
+			sequences.add(sequence);
+		}
+		return sequences;
 	}
 
 }

@@ -129,7 +129,7 @@ public class StanfordPosTagger {
 	 * @param question The question to be tokenized
 	 * @return The tokenized question
 	 */
-	public static List<List<String>> tokenizeStringMergeComp(String question) {
+	public static List<List<String>> tokenizeStringMergeCompAddLimiters(String question) {
 		List<List<String>> tokens = tokenizeString(question);
 		for(List<String> token : tokens) {
 			if(!token.get(0).equals("#start")) {
@@ -138,6 +138,34 @@ public class StanfordPosTagger {
 			if(!token.get(token.size() - 1).equals("#end")) {
 				token.add("#end");
 			}
+			ListIterator<String> it = token.listIterator();
+			while(it.hasNext()) {
+				String t = it.next();
+				if(t.equals("$") && it.hasNext()) {
+					String n = it.next();
+					if(n.equals("c")) {
+						it.remove();
+						int prevIndex = it.previousIndex();
+						it.previous();
+						token.set(prevIndex, "$c");
+					}
+					else {
+						it.previous();
+					}
+				}
+			}
+		}
+		return tokens;
+	}
+	
+	/**
+	 * Tokenizes the string and merge $ and c to $c. Adds #start and #end to each sentence. 
+	 * @param question The question to be tokenized
+	 * @return The tokenized question
+	 */
+	public static List<List<String>> tokenizeStringMergeComp(String question) {
+		List<List<String>> tokens = tokenizeString(question);
+		for(List<String> token : tokens) {
 			ListIterator<String> it = token.listIterator();
 			while(it.hasNext()) {
 				String t = it.next();

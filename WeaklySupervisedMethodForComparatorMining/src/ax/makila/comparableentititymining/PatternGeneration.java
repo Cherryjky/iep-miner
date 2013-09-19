@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import ax.makila.comparableentititymining.postagger.CompTaggedWord;
+import ax.makila.comparableentititymining.sequentialpatterns.Sequence;
 import ax.makila.comparableentititymining.sequentialpatterns.SequentialPattern;
 import ax.makila.comparableentititymining.sequentialpatterns.patterns.GeneralizedSequence;
 import ax.makila.comparableentititymining.sequentialpatterns.patterns.LexicalSequence;
@@ -13,7 +14,6 @@ import ax.makila.comparableentititymining.sequentialpatterns.patterns.Specialize
 
 import com.abahgat.suffixtree.GeneralizedSuffixTree;
 
-import edu.stanford.nlp.ling.TaggedWord;
 import edu.stanford.nlp.process.PTBTokenizer;
 
 @SuppressWarnings("unused")
@@ -23,9 +23,9 @@ public class PatternGeneration {
 
 	public static List<String> mineGoodPatterns(
 			List<String> seedComparatorPairs,
-			List<String> comparativeQuestionSet) {
+			List<Sequence> comparativeQuestionSet) {
 
-		for (String question : comparativeQuestionSet) {
+		for (Sequence question : comparativeQuestionSet) {
 			/*
 			 * String surfacePattern = surfaceTextPatternMining(question)
 			 */
@@ -53,13 +53,18 @@ public class PatternGeneration {
 	 *            The set of questions to generate patterns from
 	 * @return A set of lexical patterns
 	 */
-	public static Set<SequentialPattern> generateLexicalPatterns(List<String> questions) {
+	public static Set<SequentialPattern> generateLexicalPatterns(List<Sequence> questions) {
 		Set<SequentialPattern> lexicalPatterns = new HashSet<SequentialPattern>();
 		GeneralizedSuffixTree tree = new GeneralizedSuffixTree();
 		String regex = "(^|.*?\\s)\\$c.*?\\s\\$c[^A-Za-z0-9_$].*?$";
 		//Add all suffixes to the 
-		for(int i = 0; i < questions.size(); i++) {
-			tree.put(questions.get(i), i);
+		int index = 0;
+		for(Sequence seq : questions) {
+			List<String> internal = seq.getSequence();
+			for(int i = 0; i < internal.size(); i++) {
+				tree.put(internal.get(i), index);
+				index++;
+			}
 		}
 		Set<String> candidatePatterns = tree.searchMatchingSuffix(regex);
 		// Patterns are only kept if their frequency in the collection is more
@@ -81,10 +86,10 @@ public class PatternGeneration {
 	 * @param beta The threshold frequency for the pattern
 	 * @return true if the pattern exceeds the threshold, else false.
 	 */
-	private static boolean isFrequent(String pattern, List<String> questionSet, int beta) {
+	private static boolean isFrequent(String pattern, List<Sequence> questionSet, int beta) {
 		int counter = 0;
-		for(String question : questionSet) {
-			if(question.endsWith(pattern)) {
+		for(Sequence question : questionSet) {
+			if(question.text().endsWith(pattern)) {
 				counter++;
 			}
 		}

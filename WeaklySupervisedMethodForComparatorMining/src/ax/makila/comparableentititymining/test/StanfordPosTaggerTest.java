@@ -132,7 +132,7 @@ public class StanfordPosTaggerTest {
 		String testString = "Hey $c what are you doing?";
 		String[] testArr = {"#start", "Hey", "$c", "what", "are", "you", "doing", "?", "#end"};
 		
-		List<List<String>> list = StanfordPosTagger.tokenizeStringMergeComp(testString);
+		List<List<String>> list = StanfordPosTagger.tokenizeStringMergeCompAddLimiters(testString);
 		assertTrue(list.size() == 1);
 		
 		List<String> l = list.get(0);
@@ -144,7 +144,7 @@ public class StanfordPosTaggerTest {
 		String testString = "Hey $c what are you doing?";
 		String expectedOutput = "#start Hey $c what are you doing? #end";
 		
-		List<List<String>> list = StanfordPosTagger.tokenizeStringMergeComp(testString);
+		List<List<String>> list = StanfordPosTagger.tokenizeStringMergeCompAddLimiters(testString);
 		String output = StanfordPosTagger.tokensToString(list);
 
 		assertEquals(output, expectedOutput);
@@ -152,7 +152,7 @@ public class StanfordPosTaggerTest {
 		String anotherString = "Hey! My name is $c! What are you doing?";
 		String anotherExpected = "#start Hey! #end #start My name is $c! #end #start What are you doing? #end";
 		
-		List<List<String>> list2 = StanfordPosTagger.tokenizeStringMergeComp(anotherString);
+		List<List<String>> list2 = StanfordPosTagger.tokenizeStringMergeCompAddLimiters(anotherString);
 		String output2 = StanfordPosTagger.tokensToString(list2);
 
 		assertEquals(output2, anotherExpected);
@@ -164,7 +164,7 @@ public class StanfordPosTaggerTest {
 		String[] testArr = {"#start Hey $c what are you doing? #end"};
 		List<String> expectedOutput = Arrays.asList(testArr);
 		
-		List<List<String>> list = StanfordPosTagger.tokenizeStringMergeComp(testString);
+		List<List<String>> list = StanfordPosTagger.tokenizeStringMergeCompAddLimiters(testString);
 		List<String> output = StanfordPosTagger.tokensToSequence(list);
 
 		assertEquals(output, expectedOutput);
@@ -173,7 +173,7 @@ public class StanfordPosTaggerTest {
 		String[] anotherArr = {"#start Hey! #end", "#start My name is $c! #end", "#start What are you doing? #end"};
 		List<String> expected = Arrays.asList(anotherArr); 
 		
-		List<List<String>> list2 = StanfordPosTagger.tokenizeStringMergeComp(anotherString);
+		List<List<String>> list2 = StanfordPosTagger.tokenizeStringMergeCompAddLimiters(anotherString);
 		List<String> output2 = StanfordPosTagger.tokensToSequence(list2);
 
 		assertEquals(output2, expected);
