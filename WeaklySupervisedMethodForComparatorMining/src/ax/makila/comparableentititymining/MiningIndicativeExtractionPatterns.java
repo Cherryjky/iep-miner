@@ -112,7 +112,7 @@ public class MiningIndicativeExtractionPatterns {
 		"sonic vs knuckles?",
 		"sonic vs mario?",
 		"android vs ios?",
-		"Is that really a fight of cats vs dogs?",
+		"Is there really a fight of pikachu vs bulbasaur?",
 		"iPhone vs Galaxy?",
 		"Which City Is Better, NYC or Paris?",
 		// Non-comparable questions x 18
@@ -148,8 +148,7 @@ public class MiningIndicativeExtractionPatterns {
 	 */
 	public static void main(String argsv[]) {
 		// Used to initiate the bootstrapping
-		@SuppressWarnings("unused")
-		MiningIndicativeExtractionPatterns miner = new MiningIndicativeExtractionPatterns();
+		new MiningIndicativeExtractionPatterns();
 	}
 
 	/**
@@ -161,8 +160,8 @@ public class MiningIndicativeExtractionPatterns {
 	 */
 	public MiningIndicativeExtractionPatterns() {
 		List<Sequence> questions = preProcessQuestions(yahooAnswers);
-		extractSeedComparators(initialIEP, questions);
-		iepMining(questions);
+		List<Pair<CompTaggedWord, CompTaggedWord>> seedPairs = extractSeedComparators(initialIEP, questions);
+		iepMining(questions, seedPairs);
 	}
 
 	/**
@@ -170,7 +169,7 @@ public class MiningIndicativeExtractionPatterns {
 	 * pair, if a text contains the pair it's regarded as a comparative
 	 * question.
 	 * 
-	 * @param comparatorPairs
+	 * @param pairs
 	 *            The seed comparator pairs that are used to identify
 	 *            comparative questions
 	 * @param questions
@@ -178,18 +177,18 @@ public class MiningIndicativeExtractionPatterns {
 	 * @return All questions considered to be comparative questions with regard
 	 *         to the comparator pairs.
 	 */
-	@SuppressWarnings("unused")
-	private List<String> comparativeQuestionIdentify(
-			List<Pair<String, String>> comparatorPairs, String[] questions) {
-		List<String> comparativeQuestions = new ArrayList<String>();
-		for (String q : questions) {
-			for (Pair<String, String> cp : comparatorPairs) {
-				// if(q.matches(cp)) {
-				comparativeQuestions.add(q);
-				// }
+	private List<Sequence> comparativeQuestionIdentify(
+			List<Pair<CompTaggedWord, CompTaggedWord>> pairs, List<Sequence> questions) {
+		List<Sequence> comparativeQuestions = new ArrayList<Sequence>();
+		for (Sequence q : questions) {
+			for(Pair<CompTaggedWord, CompTaggedWord> pair : pairs) {
+				CompTaggedWord firstWord = pair.x;
+				CompTaggedWord secondWord = pair.y;
+				if(q.text().contains(firstWord.value()) && q.text().contains(secondWord.value())) {
+					comparativeQuestions.add(q);
+				}
 			}
 		}
-		// TODO Auto-generated method stub
 		return comparativeQuestions;
 	}
 
@@ -240,33 +239,30 @@ public class MiningIndicativeExtractionPatterns {
 	 * <li>Pattern generation
 	 * <li>Pattern extraction
 	 * </ol>
+	 * @param seedPairs
 	 * 
 	 * @return A list of reliable IEP.
 	 */
-	private List<String> iepMining(List<Sequence> questions) {
+	private List<String> iepMining(List<Sequence> questions, List<Pair<CompTaggedWord, CompTaggedWord>> pairs) {
 		System.out.println("Start");
 		//Get seed comparator pairs
-		//List<Pair<String, String>> seedComparatorPairs = extractSeedComparators(initialIEP, questionArchive);
 		//List<Pair<String, String>> newComparatorPairs = new ArrayList<Pair<String, String>>(seedComparatorPairs);
 		//Contains the patterns generated during each iteration
 		List<String> newPatterns = new ArrayList<String>();
 		//All the questions identified as comparative
-		List<String> comparativeQuestionSet = new ArrayList<String>();
+		List<Sequence> comparativeQuestionSet = new ArrayList<Sequence>();
 		//All patterns gathered from the previous iteration
 		List<String> iep = new ArrayList<String>();
 		do {
 			iep.addAll(newPatterns);
-			// List<String> newComparativeQuestions =
-			// comparativeQuestionIdentify(seedComparatorPairs,
-			// questionArchive);
-			// comparativeQuestionSet.addAll(newComparativeQuestions);
+			List<Sequence> newComparativeQuestions = comparativeQuestionIdentify(pairs, questions);
+			comparativeQuestionSet.addAll(newComparativeQuestions);
 			for (int i = 0; i < questions.size(); i++) {
 				if (isMatchingPatterns(iep, questions.get(i))) {
 					comparativeQuestionSet.remove(i);
 				}
 			}
-			// newPatterns =
-			PatternGeneration.mineGoodPatterns(null, questions);
+			newPatterns = PatternGeneration.mineGoodPatterns(pairs, questions);
 			/*//newComparatorPairs.clear();
 			for (String q : questionArchive) {
 				List<String> comparatorPairs = extractComparableComparators(
