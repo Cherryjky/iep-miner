@@ -2,8 +2,6 @@ package ax.makila.comparableentititymining;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ListIterator;
-import java.util.regex.Pattern;
 
 import ax.makila.comparableentititymining.postagger.CompTaggedWord;
 import ax.makila.comparableentititymining.sequentialpatterns.Sequence;
@@ -180,16 +178,16 @@ public class MiningIndicativeExtractionPatterns {
 	private List<Sequence> comparativeQuestionIdentify(
 			List<Pair<CompTaggedWord, CompTaggedWord>> pairs, List<Sequence> questions) {
 		List<Sequence> comparativeQuestions = new ArrayList<Sequence>();
-		for (Sequence q : questions) {
+		for (Sequence question : questions) {
 			for(Pair<CompTaggedWord, CompTaggedWord> pair : pairs) {
 				CompTaggedWord firstWord = pair.x;
 				CompTaggedWord secondWord = pair.y;
-				String text = q.text();
+				String text = question.text();
 				if(text.contains(firstWord.value()) && text.contains(secondWord.value())) {
-					//TODO: Figure out how to handle comparators for new comparative questions found
-					int index0 = text.indexOf(firstWord.value());
-					int index1 = text.indexOf(secondWord.value());
-					comparativeQuestions.add(q);
+					if(!question.hasReplacedComparators()) {
+						question.replaceComparators(pair);
+					}
+					comparativeQuestions.add(question);
 				}
 			}
 		}
@@ -299,105 +297,7 @@ public class MiningIndicativeExtractionPatterns {
 		return false;
 	}
 
-	@SuppressWarnings("unused")
-	private String phraseChunker(Sequence pattern) {
-		/*
-		 * Heuristic rules NP* -> NP NN* -> NN NN + NNS -> NNS NP + NPS -> NPS
-		 * More + ADJ -> JJR Most + ADJ -> JJS ...
-		 */
-		Pattern rule1 = Pattern.compile("NP\\S");
-		Pattern rule2 = Pattern.compile("NN\\S");
 
-		Pattern rule3a = Pattern.compile("NN\\s");
-		Pattern rule3b = Pattern.compile("NNS");
-
-		Pattern rule4a = Pattern.compile("NP\\s");
-		Pattern rule4b = Pattern.compile("NPS");
-
-		Pattern rule5a = Pattern.compile("more");
-		Pattern rule5b = Pattern.compile("JJ");
-
-		Pattern rule6a = Pattern.compile("most");
-		Pattern rule6b = Pattern.compile("JJ\\S");
-
-		List<List<CompTaggedWord>> tagged = pattern.getTaggedWords();
-		StringBuilder sb = new StringBuilder();
-		for (List<CompTaggedWord> list : tagged) {
-			ListIterator<CompTaggedWord> tokens = list.listIterator();
-			while (tokens.hasNext()) {
-				CompTaggedWord word = tokens.next();
-				// Rule 1
-				if (word.tag().matches(rule1.pattern())) {
-					word.setTag("NP");
-				}
-				// Rule 2
-				else if (word.tag().matches(rule2.pattern())) {
-					word.setTag("NN");
-				}
-				// Rule 3
-				else if (word.tag().matches(rule3a.pattern())
-						&& tokens.hasNext()) {
-					CompTaggedWord nextWord = tokens.next(); // Peek ahead
-					if (nextWord.tag().matches(rule3b.pattern())) {
-						tokens.remove();
-						CompTaggedWord current = tokens.previous(); // Move back
-						// again
-						current.setValue(current.value() + " "
-								+ nextWord.value());
-						current.setTag("NNS");
-					} else {
-						tokens.previous(); // Move back
-					}
-				}
-				// Rule 4
-				else if (word.tag().matches(rule4a.pattern())
-						&& tokens.hasNext()) {
-					CompTaggedWord nextWord = tokens.next();
-					if (nextWord.tag().matches(rule4b.pattern())) {
-						tokens.remove();
-						CompTaggedWord current = tokens.previous();
-						current.setValue(current.value() + " "
-								+ nextWord.value());
-						current.setTag("NPS");
-					} else {
-						tokens.previous(); // Move back
-					}
-				}
-				// Rule 5
-				else if (word.value().matches(rule5a.pattern())
-						&& tokens.hasNext()) {
-					CompTaggedWord nextWord = tokens.next();
-					if (nextWord.tag().matches(rule5b.pattern())) {
-						tokens.remove();
-						CompTaggedWord current = tokens.previous();
-						current.setValue(current.value() + " "
-								+ nextWord.value());
-						current.setTag("JJR");
-					} else {
-						tokens.previous();
-					}
-				}
-				// Rule 6
-				else if (word.value().matches(rule6a.pattern())
-						&& tokens.hasNext()) {
-					CompTaggedWord nextWord = tokens.next();
-					if (nextWord.tag().matches(rule6b.pattern())) {
-						tokens.remove();
-						CompTaggedWord current = tokens.previous();
-						current.setValue(current.value() + " "
-								+ nextWord.value());
-						current.setTag("JJS");
-					} else {
-						tokens.previous();
-					}
-				}
-
-			}
-			//pattern.updateStringRepresentation();
-
-		}
-		return pattern.toString();
-	}
 
 	private List<Sequence> preProcessQuestions(String[] questions) {
 		List<Sequence> sequences = new ArrayList<Sequence>();

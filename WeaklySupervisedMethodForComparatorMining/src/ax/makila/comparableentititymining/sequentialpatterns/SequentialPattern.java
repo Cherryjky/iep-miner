@@ -15,6 +15,8 @@ public interface SequentialPattern {
 
 	public List<String> getTokenizedVersion();
 
+	public boolean hasReplacedComparators();
+
 	public boolean isGeneralized();
 
 	public boolean isLexical();
@@ -23,7 +25,7 @@ public interface SequentialPattern {
 
 	public boolean matches(SequentialPattern pattern);
 
-	public void setTaggedWords(String comp);
+	public void setTaggedWords(List<List<CompTaggedWord>> comp);
 
 	public String text();
 }

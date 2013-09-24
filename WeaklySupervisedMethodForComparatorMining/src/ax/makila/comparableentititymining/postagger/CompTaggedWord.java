@@ -7,6 +7,11 @@ public class CompTaggedWord {
 	private final TaggedWord tag;
 	private String compTag;
 
+	public CompTaggedWord(CompTaggedWord comp) {
+		this.tag = comp.tag;
+		this.compTag = comp.compTag;
+	}
+
 	public CompTaggedWord(TaggedWord tag) {
 		this.tag = tag;
 	}
@@ -14,6 +19,20 @@ public class CompTaggedWord {
 	public CompTaggedWord(TaggedWord tag, String compTag) {
 		this.tag = tag;
 		this.compTag = compTag;
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if(other == null) {
+			return false;
+		}
+		else if(other.getClass() != this.getClass()) {
+			return false;
+		}
+		else {
+			CompTaggedWord comp = (CompTaggedWord) other;
+			return tag.equals(comp.tag);
+		}
 	}
 
 	public String getCompTag() {

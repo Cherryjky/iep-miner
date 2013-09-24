@@ -20,7 +20,7 @@ import edu.stanford.nlp.process.PTBTokenizer;
 public class PatternGeneration {
 	private static String comparator = MiningIndicativeExtractionPatterns.comparator;
 	//TODO: Use the real value for beta. This is just for testing
-	private static int beta = 1;//MiningIndicativeExtractionPatterns.beta;
+	private static int beta = 0;//MiningIndicativeExtractionPatterns.beta;
 
 	/**
 	 * A lexical pattern can be too specific. Thus, we generalize lexical
@@ -104,12 +104,9 @@ public class PatternGeneration {
 		int index = 0;
 		for(Sequence seq : questions) {
 			List<String> internal = seq.getReplacedComparatorSequence();
-			//TODO: Change this so it will check all lists. None should be null anyway...
-			if(internal != null) {
-				for(int i = 0; i < internal.size(); i++) {
-					tree.put(internal.get(i), index);
-					index++;
-				}
+			for(int i = 0; i < internal.size(); i++) {
+				tree.put(internal.get(i), index);
+				index++;
 			}
 		}
 		Set<String> candidatePatterns = tree.searchMatchingSuffix(regex);
@@ -182,7 +179,6 @@ public class PatternGeneration {
 		int counter = 0;
 		for(Sequence question : questionSet) {
 			if(question.matches(pattern)) {
-				System.out.println(pattern);
 				counter++;
 			}
 		}
@@ -192,7 +188,6 @@ public class PatternGeneration {
 	public static List<String> mineGoodPatterns(
 			List<Pair<CompTaggedWord, CompTaggedWord>> pairs,
 			List<Sequence> comparativeQuestionSet) {
-
 
 		Set<SequentialPattern> lexicalPatterns = generateLexicalPatterns(comparativeQuestionSet);
 		System.out.println("No. of lexical paqtterns: " + lexicalPatterns.size());
