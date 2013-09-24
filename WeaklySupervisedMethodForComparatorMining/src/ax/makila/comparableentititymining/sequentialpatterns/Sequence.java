@@ -20,6 +20,10 @@ public class Sequence implements SequentialPattern {
 	private List<List<String>> tokens;
 	private final List<String> tokenized = new ArrayList<String>();
 
+	/**
+	 * Constructor. Tokenizes the input string <tt>text</tt>.
+	 * @param text The input string to be considered a sequence
+	 */
 	public Sequence(String text) {
 		this.text = text;
 		StringTokenizer tokenizer = new StringTokenizer(text);
@@ -43,6 +47,15 @@ public class Sequence implements SequentialPattern {
 		return text.equals(other);
 	}
 
+	/**
+	 * Given a sequential pattern <tt>pattern</tt> and a tokenized representation of the the input text
+	 * that this object contains named <tt>comp</tt>, matches against occurences of $c in <tt>pattern</tt>
+	 * against each element in <tt>comp</tt>. When the input matches a part of the string, the position of
+	 * $c finds the comparatives and both are then considered to be a comparative pair
+	 * @param pattern A pattern used for identifying comparators by a token $c
+	 * @param comp A tokenized pos-tagged representation of the input text that this object contains
+	 * @return A pair of comparators
+	 */
 	private Pair<CompTaggedWord, CompTaggedWord> getPairFromSentence(SequentialPattern pattern,
 			List<CompTaggedWord> comp) {
 		int startIndex = 0;
@@ -148,6 +161,7 @@ public class Sequence implements SequentialPattern {
 		return sequence;
 	}
 
+
 	@Override
 	public List<List<CompTaggedWord>> getTaggedWords() {
 		if(taggedWords == null) {
@@ -156,27 +170,34 @@ public class Sequence implements SequentialPattern {
 		return taggedWords;
 	}
 
-
 	@Override
 	public List<String> getTokenizedVersion() {
 		return tokenized;
 	}
-
 	@Override
 	public boolean isGeneralized() {
 		return false;
 	}
+
 	@Override
 	public boolean isLexical() {
 		return false;
 	}
+
 
 	@Override
 	public boolean isSpecialized() {
 		return false;
 	}
 
-
+	/**
+	 * Checks if the sequential pattern <tt>pattern</tt> matches the text that this object contains,
+	 * If the pattern matches, returns true else false. $c is considered to be a wild-card unless it
+	 * has a constraint in the case of a specialized pattern in which case the tag of the word has to
+	 * match the tag of the token in the pattern.
+	 * @param pattern A sequential pattern to match against the input
+	 * @return True if pattern matches, else false
+	 */
 	@Override
 	public boolean matches(SequentialPattern pattern) {
 		for(List<CompTaggedWord> innerList : taggedWords) {
@@ -187,16 +208,29 @@ public class Sequence implements SequentialPattern {
 		return false;
 	}
 
+	/**
+	 * Checks if the sequential pattern <tt>pattern</tt> matches the pos-tagged, tokenized version
+	 * of the text that this object contains, <tt>comp</tt>. If the pattern matches, returns true
+	 * else false. $c is considered to be a wild-card unless it has a constraint in the case of
+	 * a specialized pattern in which case the tag of the word has to match the tag of the token in the
+	 * pattern.
+	 * @param pattern A sequential pattern to match against the input
+	 * @param comp A pos-tagged, tokenized representation of the input text contained in the sequence
+	 * @return True if pattern matches, else false
+	 */
 	private boolean matchesInner(SequentialPattern pattern, List<CompTaggedWord> comp) {
 		List<String> tokenized = pattern.getTokenizedVersion();
+		//keeps track of where to start in the string
 		int startIndex = 0;
 		int tokenIndex = 0;
 		boolean match = false;
 		boolean cont = true;
 		while(cont) {
+			System.out.println(startIndex);
 			innerloop:
 				for(int i = startIndex; i < comp.size(); i++) {
 					CompTaggedWord word = comp.get(i);
+					System.out.println(word.toString());
 					String token = tokenized.get(tokenIndex);
 					if(pattern.isLexical()) {
 						if(tokenIndex < tokenized.size()) {
@@ -209,6 +243,7 @@ public class Sequence implements SequentialPattern {
 								startIndex++;
 								match = false;
 								break innerloop;
+
 							}
 						}
 						else {
@@ -239,12 +274,13 @@ public class Sequence implements SequentialPattern {
 							String[] split = token.split("\\/");
 							if(split.length > 1) {
 								if(token.contains("$c")) {
+									//The tag has to match the token as well as its value
 									if(word.tag().equals(split[1])) {
 										match = true;
 										tokenIndex++;
 									}
 									else {
-										//System.out.println(word + " failed to match " + token);
+										System.out.println(word + " failed to match " + token);
 										tokenIndex = 0;
 										startIndex++;
 										match = false;
@@ -282,7 +318,7 @@ public class Sequence implements SequentialPattern {
 						}
 					}
 				}
-		cont = false;
+			cont = false;
 		}
 		//System.out.println(comp.toString() + " matches " + match);
 		return match;
@@ -321,7 +357,9 @@ public class Sequence implements SequentialPattern {
 			tokens = StanfordPosTagger.tokenizeStringMergeCompAddLimiters(text);
 		}
 		if(toString == null) {
-			toString = StanfordPosTagger.tokensToString(tokens);
+			String regex = "(^|.*?\\s)\\$c.*?\\s\\$c[^A-Za-z0-9_$].*?$";
+			toString = StanfordPosTagger.tokensToString(tokens, regex);
+
 		}
 		return toString;
 	}
