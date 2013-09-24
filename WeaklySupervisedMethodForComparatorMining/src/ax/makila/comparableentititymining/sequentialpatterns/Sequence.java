@@ -58,51 +58,51 @@ public class Sequence implements SequentialPattern {
 	 */
 	private Pair<CompTaggedWord, CompTaggedWord> getPairFromSentence(SequentialPattern pattern,
 			List<CompTaggedWord> comp) {
-		int startIndex = 0;
+		//int startIndex = 0;
 		int tokenIndex = 0;
 		List<String> tokenized = pattern.getTokenizedVersion();
 		List<Pair<CompTaggedWord, Integer>> candidates = new ArrayList<Pair<CompTaggedWord, Integer>>();
 		int candidateIndex = 0;
-		boolean cont = true;
-		while(cont) {
-			innerloop:
-				for(int i = startIndex; i < comp.size(); i++) {
-					CompTaggedWord word = comp.get(i);
-					String token = tokenized.get(tokenIndex);
-					if(token.contains("$c")) {
-						if(pattern.isLexical() || pattern.isGeneralized()) {
-							candidates.add(candidateIndex, new Pair<CompTaggedWord, Integer>(word, i));
-							candidateIndex++;
-							tokenIndex++;
-						}
-						else {
-							String[] split = token.split("\\/");
-							if(word.tag().equals(split[1])) {
-								candidates.add(candidateIndex, new Pair<CompTaggedWord, Integer>(word, i));
-								candidateIndex++;
-								tokenIndex++;
-							}
-							else {
-								startIndex++;
-								tokenIndex = 0;
-								candidateIndex = 0;
-								break innerloop;
-							}
-						}
-					}
-					else if(word.value().equals(token) || word.tag().equals(token)) {
+		//boolean cont = true;
+		//while(cont) {
+		//	innerloop:
+		for(int i = 0; i < comp.size(); i++) {
+			CompTaggedWord word = comp.get(i);
+			String token = tokenized.get(tokenIndex);
+			if(token.contains("$c")) {
+				if(pattern.isLexical() || pattern.isGeneralized()) {
+					candidates.add(candidateIndex, new Pair<CompTaggedWord, Integer>(word, i));
+					candidateIndex++;
+					tokenIndex++;
+				}
+				else {
+					String[] split = token.split("\\/");
+					if(word.tag().equals(split[1])) {
+						candidates.add(candidateIndex, new Pair<CompTaggedWord, Integer>(word, i));
+						candidateIndex++;
 						tokenIndex++;
 					}
 					else {
-						candidateIndex = 0;
-						startIndex++;
+						//	startIndex++;
 						tokenIndex = 0;
-						break innerloop;
+						candidateIndex = 0;
+						//					break innerloop;
 					}
-
 				}
-		cont = false;
+			}
+			else if(word.value().equals(token) || word.tag().equals(token)) {
+				tokenIndex++;
+			}
+			else {
+				candidateIndex = 0;
+				//startIndex++;
+				tokenIndex = 0;
+				//		break innerloop;
+			}
+
 		}
+		//cont = false;
+		//}
 		int firstIndex = candidates.get(0).y;
 		int secondIndex = candidates.get(1).y;
 		CompTaggedWord tagged = comp.get(firstIndex);
@@ -221,106 +221,64 @@ public class Sequence implements SequentialPattern {
 	private boolean matchesInner(SequentialPattern pattern, List<CompTaggedWord> comp) {
 		List<String> tokenized = pattern.getTokenizedVersion();
 		//keeps track of where to start in the string
-		int startIndex = 0;
 		int tokenIndex = 0;
 		boolean match = false;
-		boolean cont = true;
-		while(cont) {
-			System.out.println(startIndex);
-			innerloop:
-				for(int i = startIndex; i < comp.size(); i++) {
-					CompTaggedWord word = comp.get(i);
-					System.out.println(word.toString());
-					String token = tokenized.get(tokenIndex);
-					if(pattern.isLexical()) {
-						if(tokenIndex < tokenized.size()) {
-							if(token.equals("$c") || word.value().equals(token)) {
-								match = true;
-								tokenIndex++;
-							}
-							else {
-								tokenIndex = 0;
-								startIndex++;
-								match = false;
-								break innerloop;
-
-							}
-						}
-						else {
-							cont = false;
-							break;
-						}
+		for(int i = 0; i < comp.size(); i++) {
+			CompTaggedWord word = comp.get(i);
+			String token = tokenized.get(tokenIndex);
+			if(tokenIndex < tokenized.size()) {
+				if(pattern.isLexical() || pattern.isGeneralized()) {
+					if(token.equals("$c") || word.value().equals(token) || word.tag().equals(token)) {
+						tokenIndex++;
 					}
-					else if(pattern.isGeneralized()) {
-						if(tokenIndex < tokenized.size()) {
-							if(token.equals("$c") || word.value().equals(token) || word.tag().equals(token)) {
-								match = true;
-								tokenIndex++;
-							}
-							else {
-								tokenIndex = 0;
-								startIndex++;
-								match = false;
-								break innerloop;
-							}
-						}
-						else {
-							cont = false;
-							break;
-						}
-					}
-					else if(pattern.isSpecialized()) {
-						if(tokenIndex < tokenized.size()) {
-							String[] split = token.split("\\/");
-							if(split.length > 1) {
-								if(token.contains("$c")) {
-									//The tag has to match the token as well as its value
-									if(word.tag().equals(split[1])) {
-										match = true;
-										tokenIndex++;
-									}
-									else {
-										System.out.println(word + " failed to match " + token);
-										tokenIndex = 0;
-										startIndex++;
-										match = false;
-										break innerloop;
-									}
-								}
-								else if(word.value().equals(split[0]) || word.tag().equals(split[1])) {
-									//System.out.println(word + " matches " + token);
-									match = true;
-									tokenIndex++;
-								}
-								else {
-									tokenIndex = 0;
-									startIndex++;
-									match = false;
-									break innerloop;
-								}
-							}
-							else {
-								if(token.equals("$c") || word.value().equals(token) || word.tag().equals(token)) {
-									match = true;
-									tokenIndex++;
-								}
-								else {
-									tokenIndex = 0;
-									startIndex++;
-									match = false;
-									break innerloop;
-								}
-							}
-						}
-						else {
-							cont = false;
-							break;
-						}
+					else {
+						tokenIndex = 0;
 					}
 				}
-			cont = false;
+				else if(pattern.isSpecialized()) {
+					if(tokenIndex < tokenized.size()) {
+						String[] split = token.split("\\/");
+						//Splits $c and its POS-tag or another input that is separated from its
+						//pos tag with the delimiter "/"
+						if(split.length > 1) {
+							if(token.contains("$c")) {
+								if(word.tag().equals(split[1])) {
+									tokenIndex++;
+								}
+								else {
+									tokenIndex = 0;
+								}
+							}
+							else if(word.value().equals(split[0]) || word.tag().equals(split[1])) {
+								tokenIndex++;
+							}
+							else {
+								tokenIndex = 0;
+							}
+						}
+						else {
+							if(token.equals("$c") || word.value().equals(token) || word.tag().equals(token)) {
+								tokenIndex++;
+							}
+							else {
+								tokenIndex = 0;
+							}
+						}
+					}
+					else {
+						break;
+					}
+				}
+			}
+			else {
+				break;
+			}
 		}
-		//System.out.println(comp.toString() + " matches " + match);
+		if(tokenIndex == tokenized.size()) {
+			match = true;
+		} else {
+			match = false;
+		}
 		return match;
 	}
 

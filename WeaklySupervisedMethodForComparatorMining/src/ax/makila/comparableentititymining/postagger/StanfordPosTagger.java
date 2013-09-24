@@ -2,6 +2,7 @@ package ax.makila.comparableentititymining.postagger;
 
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -24,14 +25,14 @@ public class StanfordPosTagger {
 	 *            The string to be tagged
 	 * @return A list containing a list of sentences containing tokenized words
 	 *         with associated POS tags
-	 */ 
+	 */
 	public static List<ArrayList<TaggedWord>> tagString(String question) {
 		List<List<HasWord>> sentences = null;
 		sentences = MaxentTagger.tokenizeText(new StringReader(question));
 		List<ArrayList<TaggedWord>> taggedWords = tagger.process(sentences);
 		return taggedWords;
 	}
-	
+
 	/**
 	 * Tags a string but sets a special pos tag, "#" to #start and #end and merges any
 	 * occurence of a lone $ and a c to $c. Adds #start and #end to each sentence if missing.
@@ -60,18 +61,18 @@ public class StanfordPosTagger {
 				word.add(tagged);
 			}
 		}
-		
+
 		//Transform all taggedwords to my own tagged version which is better suited for this task
 		for(int i = 0; i < taggedWords.size(); i++) {
 			ArrayList<TaggedWord> innerList = taggedWords.get(i);
-			List<CompTaggedWord> compInnerList = new ArrayList<CompTaggedWord>(); 
+			List<CompTaggedWord> compInnerList = new ArrayList<CompTaggedWord>();
 			for(TaggedWord word : innerList) {
 				CompTaggedWord comp = new CompTaggedWord(word);
 				compInnerList.add(comp);
 			}
 			compTaggedWords.add(compInnerList);
 		}
-		
+
 		for(List<CompTaggedWord> wordList : compTaggedWords) {
 			ListIterator<CompTaggedWord> it = wordList.listIterator();
 			while(it.hasNext()) {
@@ -95,9 +96,9 @@ public class StanfordPosTagger {
 				}
 			}
 		}
-		
+
 		return compTaggedWords;
-		
+
 	}
 
 	/**
@@ -123,43 +124,9 @@ public class StanfordPosTagger {
 		}
 		return tags;
 	}
-	
+
 	/**
-	 * Tokenizes the string and merge $ and c to $c. Adds #start and #end to each sentence. 
-	 * @param question The question to be tokenized
-	 * @return The tokenized question
-	 */
-	public static List<List<String>> tokenizeStringMergeCompAddLimiters(String question) {
-		List<List<String>> tokens = tokenizeString(question);
-		for(List<String> token : tokens) {
-			if(!token.get(0).equals("#start")) {
-				token.add(0, "#start");
-			}
-			if(!token.get(token.size() - 1).equals("#end")) {
-				token.add("#end");
-			}
-			ListIterator<String> it = token.listIterator();
-			while(it.hasNext()) {
-				String t = it.next();
-				if(t.equals("$") && it.hasNext()) {
-					String n = it.next();
-					if(n.equals("c")) {
-						it.remove();
-						int prevIndex = it.previousIndex();
-						it.previous();
-						token.set(prevIndex, "$c");
-					}
-					else {
-						it.previous();
-					}
-				}
-			}
-		}
-		return tokens;
-	}
-	
-	/**
-	 * Tokenizes the string and merge $ and c to $c. Adds #start and #end to each sentence. 
+	 * Tokenizes the string and merge $ and c to $c. Adds #start and #end to each sentence.
 	 * @param question The question to be tokenized
 	 * @return The tokenized question
 	 */
@@ -185,25 +152,41 @@ public class StanfordPosTagger {
 		}
 		return tokens;
 	}
-	
+
 	/**
-	 * Returns a string representation of the tokenized input <tt>list</tt>.
-	 * @param list A tokenized list of sentences and words
-	 * @return A String representation of the tokenized list
+	 * Tokenizes the string and merge $ and c to $c. Adds #start and #end to each sentence.
+	 * @param question The question to be tokenized
+	 * @return The tokenized question
 	 */
-	public static String tokensToString(List<List<String>> list) {
-		StringBuilder sb = new StringBuilder();
-		for(List<String> innerList : list) {
-			for(String token : innerList) {
-				sb.append(token);
-				sb.append(" ");
+	public static List<List<String>> tokenizeStringMergeCompAddLimiters(String question) {
+		List<List<String>> tokens = tokenizeString(question);
+		for(List<String> token : tokens) {
+			if(!token.get(0).equals("#start")) {
+				token.add(0, "#start");
+			}
+			if(!token.get(token.size() - 1).equals("#end")) {
+				token.add("#end");
+			}
+			ListIterator<String> it = token.listIterator();
+			while(it.hasNext()) {
+				String t = it.next();
+				if(t.equals("$") && it.hasNext()) {
+					String n = it.next();
+					if(n.startsWith("c")) {
+						it.remove();
+						int prevIndex = it.previousIndex();
+						it.previous();
+						token.set(prevIndex, t + n);
+					}
+					else {
+						it.previous();
+					}
+				}
 			}
 		}
-		
-		String string = PTBTokenizer.ptb2Text(sb.toString().trim());
-		return string;
+		return tokens;
 	}
-	
+
 	/**
 	 * Returns a sequence representation of the tokenized input <tt>list</tt>.
 	 * @param list A tokenized list of sentences and words
@@ -220,11 +203,49 @@ public class StanfordPosTagger {
 			String string = PTBTokenizer.ptb2Text(sb.toString().trim());
 			output.add(string);
 		}
-		
+
 		return output;
 	}
 
+	/**
+	 * Returns a string representation of the tokenized input <tt>list</tt>.
+	 * @param list A tokenized list of sentences and words
+	 * @return A String representation of the tokenized list
+	 */
+	public static String tokensToString(List<List<String>> list) {
+		StringBuilder sb = new StringBuilder();
+		for(List<String> innerList : list) {
+			for(String token : innerList) {
+				sb.append(token);
+				sb.append(" ");
+			}
+		}
 
-	
-	
+		String string = PTBTokenizer.ptb2Text(sb.toString().trim());
+		return string;
+	}
+
+	/**
+	 * Returns a string representation of the tokenized input <tt>list</tt>. Removes sublists that doesn't
+	 * match the regular expression <tt>regex</tt>.
+	 * @param list A tokenized list of sentences and words
+	 * @param regex A regular expression to matched against a string representation of a sublist
+	 * @return A String representation of the tokenized list
+	 */
+	public static String tokensToString(List<List<String>> list, String regex) {
+		Iterator<List<String>> it = list.iterator();
+		StringBuilder sb = new StringBuilder();
+		while(it.hasNext()) {
+			List<String> sub = it.next();
+			if(!sub.toString().matches(regex)) {
+				it.remove();
+			}
+		}
+
+		return tokensToString(list);
+	}
+
+
+
+
 }

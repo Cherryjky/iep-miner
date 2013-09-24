@@ -35,23 +35,21 @@ public class PatternGeneration {
 	 */
 	public static Set<SequentialPattern> generateGeneralizedPatterns(
 			Set<SequentialPattern> lexPatterns) {
-		System.out.println("Lexical pattern size = " + lexPatterns.size());
 		Set<SequentialPattern> generalizedPatterns = new HashSet<SequentialPattern>();
 		for(SequentialPattern sequence : lexPatterns) {
 			List<List<CompTaggedWord>> taggedSequence = sequence.getTaggedWords();
 			for(List<CompTaggedWord> comp : taggedSequence) {
-				System.out.println("Sequence length = " + comp.size());
 				//Checks if the string starts or ends with #start or #end
 				int start = 0;
 				int end = 0;
 				if(comp.get(0).tag().equals("#")) {
 					start = 1;
 				}
-				else if(comp.get(taggedSequence.size() - 1).tag().equals("#")) {
+				if(comp.get(comp.size() - 1).tag().equals("#")) {
 					end = 1;
 				}
 				//Sets a max limit to reduce the processing time
-				int numBits = Math.min(taggedSequence.size(), 12);
+				int numBits = Math.min(comp.size(), 12);
 				int max = (int) Math.pow(2, numBits - start - 1);
 				for(int i = 1 + start; i <= max; i += 1 + end) {
 					String format = "%" + numBits + "s";
@@ -66,11 +64,15 @@ public class PatternGeneration {
 						if(binary[j] == '1') {
 							//Ignore comparators
 							if(!replace.value().equals("$c")) {
-								sb.append(replace.tag());
+								sb.append(replace.toString());
 							}
 							else {
 								sb.append(replace.value());
 							}
+							sb.append(" ");
+						}
+						else {
+							sb.append(replace.value());
 							sb.append(" ");
 						}
 					}
@@ -114,8 +116,8 @@ public class PatternGeneration {
 		// Patterns are only kept if their frequency in the collection is more
 		// than an empirically determined number beta
 		for(String candidate : candidatePatterns) {
-			if(isFrequent(candidate, questions, beta)) {
-				LexicalSequence lex = new LexicalSequence(candidate);
+			SequentialPattern lex = new LexicalSequence(candidate);
+			if(isFrequent(lex, questions, beta)) {
 				lexicalPatterns.add(lex);
 			}
 		}
@@ -140,6 +142,7 @@ public class PatternGeneration {
 	 */
 	public static Set<SequentialPattern> generateSpecializedPatterns(
 			Set<SequentialPattern> lexicalPatterns, Set<SequentialPattern> generalPatterns) {
+		String regex = "(^|.*?\\s)\\$c.*?\\s\\$c[^A-Za-z0-9_$].*?$";
 		List<SequentialPattern> combinedPatterns = new ArrayList<SequentialPattern>(lexicalPatterns);
 		combinedPatterns.addAll(generalPatterns);
 		Set<SequentialPattern> specializedPatterns = new HashSet<SequentialPattern>();
@@ -147,19 +150,21 @@ public class PatternGeneration {
 			SequentialPattern pattern = combinedPatterns.get(i);
 			List<List<CompTaggedWord>> tokens = pattern.getTaggedWords();
 			for(List<CompTaggedWord> list : tokens) {
-				StringBuilder sb = new StringBuilder();
-				for(CompTaggedWord tag : list) {
-					if(tag.value().contains("$c")) {
-						sb.append(tag.tag());
+				if(list.toString().matches(regex)) {
+					StringBuilder sb = new StringBuilder();
+					for(CompTaggedWord tag : list) {
+						if(tag.value().equals("$c")) {
+							sb.append(tag.toString());
+						}
+						else {
+							sb.append(tag.value());
+						}
+						sb.append(" ");
 					}
-					else {
-						sb.append(tag.value());
-					}
-					sb.append(" ");
+					String sequence = PTBTokenizer.ptb2Text(sb.toString());
+					SequentialPattern seq = new SpecializedSequence(sequence);
+					specializedPatterns.add(seq);
 				}
-				String sequence = PTBTokenizer.ptb2Text(sb.toString());
-				SequentialPattern seq = new SpecializedSequence(sequence);
-				specializedPatterns.add(seq);
 			}
 		}
 		return specializedPatterns;
@@ -173,11 +178,11 @@ public class PatternGeneration {
 	 * @param beta The threshold frequency for the pattern
 	 * @return true if the pattern exceeds the threshold, else false.
 	 */
-	private static boolean isFrequent(String pattern, List<Sequence> questionSet, int beta) {
+	private static boolean isFrequent(SequentialPattern pattern, List<Sequence> questionSet, int beta) {
 		int counter = 0;
 		for(Sequence question : questionSet) {
-			if(question.text().endsWith(pattern)) {
-				//TODO:Fix this method as its obviously not working. The patterns dont match
+			if(question.matches(pattern)) {
+				System.out.println(pattern);
 				counter++;
 			}
 		}
@@ -190,13 +195,17 @@ public class PatternGeneration {
 
 
 		Set<SequentialPattern> lexicalPatterns = generateLexicalPatterns(comparativeQuestionSet);
-		System.out.println(lexicalPatterns.size());
-		//Set<SequentialPattern> generalizedPatterns = generateGeneralizedPatterns(lexicalPatterns);
-		//System.out.println(generalizedPatterns.size());
-		//Set<SequentialPattern> specializedPatterns = generateSpecializedPatterns(
-		//		lexicalPatterns, generalizedPatterns);
-		//System.out.println(specializedPatterns.size());
+		System.out.println("No. of lexical paqtterns: " + lexicalPatterns.size());
+		Set<SequentialPattern> generalizedPatterns = generateGeneralizedPatterns(lexicalPatterns);
+		System.out.println("No. of generalized patterns: " + generalizedPatterns.size());
+		Set<SequentialPattern> specializedPatterns = generateSpecializedPatterns(
+				lexicalPatterns, generalizedPatterns);
+		System.out.println("No. of specialized patterns: " + specializedPatterns.size());
 
+		Set<SequentialPattern> allPatterns = new HashSet<SequentialPattern>(lexicalPatterns);
+		allPatterns.addAll(generalizedPatterns);
+		allPatterns.addAll(specializedPatterns);
+		System.out.println("Total no. of patterns " + allPatterns.size());
 		//Do some fancy pattern eval
 		return null;
 	}

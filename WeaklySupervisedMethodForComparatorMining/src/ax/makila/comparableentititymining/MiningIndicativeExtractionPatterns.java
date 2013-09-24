@@ -189,7 +189,6 @@ public class MiningIndicativeExtractionPatterns {
 					//TODO: Figure out how to handle comparators for new comparative questions found
 					int index0 = text.indexOf(firstWord.value());
 					int index1 = text.indexOf(secondWord.value());
-
 					comparativeQuestions.add(q);
 				}
 			}
