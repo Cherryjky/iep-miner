@@ -42,6 +42,55 @@ public class StanfordPosTagger {
 	public static List<List<CompTaggedWord>> tagStringHandleIdentifier(String question) {
 		List<List<CompTaggedWord>> compTaggedWords = new ArrayList<List<CompTaggedWord>>();
 		List<ArrayList<TaggedWord>> taggedWords = tagString(question);
+
+		//Transform all taggedwords to my own tagged version which is better suited for this task
+		for(int i = 0; i < taggedWords.size(); i++) {
+			ArrayList<TaggedWord> innerList = taggedWords.get(i);
+			List<CompTaggedWord> compInnerList = new ArrayList<CompTaggedWord>();
+			for(TaggedWord word : innerList) {
+				CompTaggedWord comp = new CompTaggedWord(word);
+				compInnerList.add(comp);
+			}
+			compTaggedWords.add(compInnerList);
+		}
+
+		for(List<CompTaggedWord> wordList : compTaggedWords) {
+			ListIterator<CompTaggedWord> it = wordList.listIterator();
+			while(it.hasNext()) {
+				CompTaggedWord word = it.next();
+				if(word.value().equals("#start") || word.value().equals("#end")) {
+					word.setTag("#");
+				}
+				//The tagger splits $c to $ and c so we have to merge them
+				else if(word.value().equals("$") && it.hasNext()) {
+					CompTaggedWord next = it.next();
+					if(next.value().equals("c")) {
+						it.remove();
+						it.previous();
+						word.setValue("$c");
+						word.setTag(next.tag());
+						word.setCompTag(CompTaggedWord.COMP_TAG);
+					}
+					else {
+						it.previous();
+					}
+				}
+			}
+		}
+
+		return compTaggedWords;
+
+	}
+
+	/**
+	 * Tags a string but sets a special pos tag, "#" to #start and #end and merges any
+	 * occurence of a lone $ and a c to $c. Adds #start and #end to each sentence if missing.
+	 * @param question The input string
+	 * @return A sentence separated array of tagged words
+	 */
+	public static List<List<CompTaggedWord>> tagStringHandleIdentifierAddLimiters(String question) {
+		List<List<CompTaggedWord>> compTaggedWords = new ArrayList<List<CompTaggedWord>>();
+		List<ArrayList<TaggedWord>> taggedWords = tagString(question);
 		ListIterator<ArrayList<TaggedWord>> iterator = taggedWords.listIterator();
 
 		while(iterator.hasNext()) {
@@ -101,6 +150,7 @@ public class StanfordPosTagger {
 
 	}
 
+
 	/**
 	 * Tokenizes the input question into sentences and tokenize each sentence
 	 * into words.
@@ -132,25 +182,51 @@ public class StanfordPosTagger {
 	 */
 	public static List<List<String>> tokenizeStringMergeComp(String question) {
 		List<List<String>> tokens = tokenizeString(question);
-		for(List<String> token : tokens) {
-			ListIterator<String> it = token.listIterator();
-			while(it.hasNext()) {
-				String t = it.next();
-				if(t.equals("$") && it.hasNext()) {
-					String n = it.next();
-					if(n.equals("c")) {
+		List<String> token = new ArrayList<String>();
+		for(List<String> t : tokens) {
+			token.addAll(t);
+		}
+		ListIterator<String> it = token.listIterator();
+		while(it.hasNext()) {
+			String t = it.next();
+			if(t.equals("$") && it.hasNext()) {
+				String n = it.next();
+				if(n.startsWith("c")) {
+					it.remove();
+					int prevIndex = it.previousIndex();
+					it.previous();
+					token.set(prevIndex, t + n);
+				}
+				else {
+					it.previous();
+				}
+			}
+			else if(t.matches("[\\.\\?\\!]") && it.hasNext()) {
+				String n = it.next();
+				if(n.equals("\\/") && it.hasNext()) {
+					String m = it.next();
+					if(m.equals(".")) {
 						it.remove();
-						int prevIndex = it.previousIndex();
 						it.previous();
-						token.set(prevIndex, "$c");
+						int prevIndex = it.previousIndex();
+						it.remove();
+						it.previous();
+						token.set(prevIndex, t + n + m);
 					}
 					else {
 						it.previous();
+						it.previous();
 					}
+				}
+				else {
+					it.previous();
 				}
 			}
 		}
-		return tokens;
+		List<List<String>> tok = new ArrayList<List<String>>();
+		tok.add(token);
+
+		return tok;
 	}
 
 	/**
@@ -220,9 +296,7 @@ public class StanfordPosTagger {
 				sb.append(" ");
 			}
 		}
-
-		String string = PTBTokenizer.ptb2Text(sb.toString().trim());
-		return string;
+		return sb.toString();
 	}
 
 	/**
