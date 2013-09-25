@@ -66,7 +66,7 @@ public class StanfordPosTaggerTest {
 		String testString = "Hej $c what are you doing?";
 		String[] testArr = {"#start", "Hej", "$c", "what", "are", "you", "doing", "?", "#end"};
 		
-		List<List<CompTaggedWord>> test = StanfordPosTagger.tagStringHandleIdentifier(testString);
+		List<List<CompTaggedWord>> test = StanfordPosTagger.tagStringHandleIdentifierAddLimiters(testString);
 		List<CompTaggedWord> innerList = new ArrayList<CompTaggedWord>(test.get(0));
 		for(int i = 1; i < test.size(); i++) {
 			innerList.addAll(test.get(i));
@@ -91,7 +91,7 @@ public class StanfordPosTaggerTest {
 		String testString2 = "#start Hej $c what are you doing? #end";
 		String[] testArr2 = {"#start", "Hej", "$c", "what", "are", "you", "doing", "?", "#end"};
 		
-		List<List<CompTaggedWord>> test2 = StanfordPosTagger.tagStringHandleIdentifier(testString2);
+		List<List<CompTaggedWord>> test2 = StanfordPosTagger.tagStringHandleIdentifierAddLimiters(testString2);
 		List<CompTaggedWord> innerList2 = new ArrayList<CompTaggedWord>(test2.get(0));
 		for(int i = 1; i < test2.size(); i++) {
 			innerList.addAll(test2.get(i));

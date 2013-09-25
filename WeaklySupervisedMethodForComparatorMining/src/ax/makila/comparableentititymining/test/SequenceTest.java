@@ -14,7 +14,9 @@ import org.junit.Test;
 import ax.makila.comparableentititymining.postagger.CompTaggedWord;
 import ax.makila.comparableentititymining.sequentialpatterns.Sequence;
 import ax.makila.comparableentititymining.sequentialpatterns.SequentialPattern;
+import ax.makila.comparableentititymining.sequentialpatterns.patterns.GeneralizedSequence;
 import ax.makila.comparableentititymining.sequentialpatterns.patterns.LexicalSequence;
+import ax.makila.comparableentititymining.sequentialpatterns.patterns.SpecializedSequence;
 import edu.stanford.nlp.ling.TaggedWord;
 
 public class SequenceTest {
@@ -26,7 +28,11 @@ public class SequenceTest {
 
 	@Test
 	public void testGetPairs() {
-		fail("Not yet implemented");
+		Sequence seq = new Sequence("is there really a fight of pikachu vs bulbasaur?");
+		seq.set();
+		SequentialPattern pattern = new SpecializedSequence("#start is there/EX really a/DT fight of/IN $c/NN vs $c/NN? #end");
+
+		seq.getPairs(pattern);
 	}
 
 	@Test
@@ -79,7 +85,7 @@ public class SequenceTest {
 		Sequence seq = new Sequence("test");
 		seq.set();
 		SequentialPattern pattern = new LexicalSequence("$c vs $c? #end");
-		assertTrue(seq.matches(pattern));
+		assertFalse(seq.matches(pattern));
 
 		Sequence seq2 = new Sequence("The final showdown cats vs dogs?");
 		seq2.set();
@@ -90,6 +96,18 @@ public class SequenceTest {
 		seq3.set();
 		SequentialPattern pattern3 = new LexicalSequence("cats vs cows? #end");
 		assertFalse(seq3.matches(pattern3));
+
+		Sequence seq4 = new Sequence("Is there really a fight of pikachu vs bulbasaur?");
+		seq4.set();
+		SequentialPattern pattern4 = new SpecializedSequence("#start Is there/EX really a/DT fight of/IN $c/NN vs $c/NN? #end");
+		assertTrue(seq4.matches(pattern4));
+
+		SequentialPattern pattern5 = new GeneralizedSequence("#start Is there/EX really/RB a fight of/IN $c vs $c? #end");
+		assertTrue(seq4.matches(pattern5));
+
+		SequentialPattern pattern6 = new SpecializedSequence("really a fight of $c/NN vs/CC $c/NN?/. #end");
+		assertTrue(seq4.matches(pattern6));
+
 	}
 
 	@Test
