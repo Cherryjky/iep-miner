@@ -78,34 +78,37 @@ public class Sequence implements SequentialPattern {
 		for(int i = 0; i < comp.size(); i++) {
 			CompTaggedWord word = comp.get(i);
 			String token = tokenized.get(tokenIndex);
-			if(token.contains("$c")) {
-				if(pattern.isLexical() || pattern.isGeneralized()) {
+			String[] split = token.split("\\/");
+			if(split.length > 1) {
+				if(split[0].equals("$c") && word.tag().equals(split[1])) {
 					candidates.add(candidateIndex, new Pair<CompTaggedWord, Integer>(word, i));
 					candidateIndex++;
 					tokenIndex++;
 				}
+				else if(split[0].equals(word.value()) || split[1].equals(word.tag())) {
+					tokenIndex++;
+				}
 				else {
-					String[] split = token.split("\\/");
-					if(word.tag().equals(split[1])) {
-						candidates.add(candidateIndex, new Pair<CompTaggedWord, Integer>(word, i));
-						candidateIndex++;
-						tokenIndex++;
-					}
-					else {
-						tokenIndex = 0;
-						candidateIndex = 0;
-					}
+					candidateIndex = 0;
+					tokenIndex = 0;
 				}
 			}
-			else if(word.value().equals(token) || word.tag().equals(token)) {
-				tokenIndex++;
-			}
 			else {
-				candidateIndex = 0;
-				tokenIndex = 0;
+				if(token.equals("$c")) {
+					candidates.add(candidateIndex, new Pair<CompTaggedWord, Integer>(word, i));
+					candidateIndex++;
+					tokenIndex++;
+				}
+				else if(token.equals(word.value())) {
+					tokenIndex++;
+				}
+				else {
+					candidateIndex = 0;
+					tokenIndex = 0;
+				}
 			}
-
 		}
+
 		int firstIndex = candidates.get(0).y;
 		int secondIndex = candidates.get(1).y;
 		CompTaggedWord tagged = comp.get(firstIndex);
@@ -130,6 +133,9 @@ public class Sequence implements SequentialPattern {
 
 		return pair;
 	}
+
+
+
 	public List<Pair<CompTaggedWord, CompTaggedWord>> getPairs(SequentialPattern pattern) {
 		List<Pair<CompTaggedWord, CompTaggedWord>> pairs = new ArrayList<Pair<CompTaggedWord,CompTaggedWord>>();
 		List<List<CompTaggedWord>> tagged = null;
@@ -276,7 +282,19 @@ public class Sequence implements SequentialPattern {
 					}
 				}
 				else if(pattern.isGeneralized()) {
-					if(token.equals("$c") || word.value().equals(token) || word.tag().equals(token)) {
+					String[] split = token.split("\\/");
+					if(split.length > 1) {
+						if(word.value().equals(split[0]) || word.tag().equals(split[1])) {
+							tokenIndex++;
+						}
+						else {
+							if(tokenIndex != 0) {
+								i--;
+							}
+							tokenIndex = 0;
+						}
+					}
+					else if(token.equals("$c") || word.value().equals(token) || word.tag().equals(token)) {
 						tokenIndex++;
 					}
 					else {
@@ -292,16 +310,10 @@ public class Sequence implements SequentialPattern {
 						//Splits $c and its POS-tag or another input that is separated from its
 						//pos tag with the delimiter "/"
 						if(split.length > 1) {
-							if(token.contains("$c")) {
-								if(word.tag().equals(split[1])) {
-									tokenIndex++;
-								}
-								else {
-									if(tokenIndex != 0) {
-										i--;
-									}
-									tokenIndex = 0;
-								}
+							if(split[0].equals("$c") && word.tag().equals(split[1])) {
+								//The token follows the constraint set by the pattern
+
+								tokenIndex++;
 							}
 							else if(word.value().equals(split[0]) || word.tag().equals(split[1])) {
 								tokenIndex++;
@@ -314,7 +326,7 @@ public class Sequence implements SequentialPattern {
 							}
 						}
 						else {
-							if(token.equals("$c") || word.value().equals(token) || word.tag().equals(token)) {
+							if(token.equals("$c") || word.value().equals(token)) {
 								tokenIndex++;
 							}
 							else {
@@ -474,7 +486,7 @@ public class Sequence implements SequentialPattern {
 		tokens = StanfordPosTagger.tokenizeStringMergeCompAddLimiters(text);
 		toString = StanfordPosTagger.tokensToString(tokens);
 		sequence = StanfordPosTagger.tokensToSequence(tokens);
-		taggedWords = StanfordPosTagger.tagStringHandleIdentifier(text);
+		taggedWords = StanfordPosTagger.tagStringHandleIdentifierAddLimiters(text);
 
 	}
 
