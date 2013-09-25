@@ -245,16 +245,16 @@ public class MiningIndicativeExtractionPatterns {
 	 * 
 	 * @return A list of reliable IEP.
 	 */
-	private List<String> iepMining(List<Sequence> questions, List<Pair<CompTaggedWord, CompTaggedWord>> pairs) {
+	private List<SequentialPattern> iepMining(List<Sequence> questions, List<Pair<CompTaggedWord, CompTaggedWord>> pairs) {
 		System.out.println("Start");
 		//Get seed comparator pairs
 		//List<Pair<String, String>> newComparatorPairs = new ArrayList<Pair<String, String>>(seedComparatorPairs);
 		//Contains the patterns generated during each iteration
-		List<String> newPatterns = new ArrayList<String>();
+		List<SequentialPattern> newPatterns = new ArrayList<SequentialPattern>();
 		//All the questions identified as comparative
 		List<Sequence> comparativeQuestionSet = new ArrayList<Sequence>();
 		//All patterns gathered from the previous iteration
-		List<String> iep = new ArrayList<String>();
+		List<SequentialPattern> iep = new ArrayList<SequentialPattern>();
 		do {
 			iep.addAll(newPatterns);
 			List<Sequence> newComparativeQuestions = comparativeQuestionIdentify(pairs, questions);
@@ -288,9 +288,9 @@ public class MiningIndicativeExtractionPatterns {
 	 *            A question that is compared with the IEPs
 	 * @return True if question matches pattern, else false.
 	 */
-	private boolean isMatchingPatterns(List<String> iep, Sequence q) {
-		for (String p : iep) {
-			if (q.text().matches(p)) {
+	private boolean isMatchingPatterns(List<SequentialPattern> iep, Sequence q) {
+		for (SequentialPattern p : iep) {
+			if (q.matches(p)) {
 				return true;
 			}
 		}
