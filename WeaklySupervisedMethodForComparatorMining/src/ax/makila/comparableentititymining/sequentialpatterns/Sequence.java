@@ -132,7 +132,17 @@ public class Sequence implements SequentialPattern {
 	}
 	public List<Pair<CompTaggedWord, CompTaggedWord>> getPairs(SequentialPattern pattern) {
 		List<Pair<CompTaggedWord, CompTaggedWord>> pairs = new ArrayList<Pair<CompTaggedWord,CompTaggedWord>>();
-		for(List<CompTaggedWord> comp : taggedWords) {
+		List<List<CompTaggedWord>> tagged = null;
+		if(pattern.isLexical()) {
+			tagged = taggedWords;
+		}
+		else if(pattern.isGeneralized() || pattern.isSpecialized()) {
+			if(phraseChunkedTags == null) {
+				phraseChunker();
+			}
+			tagged = phraseChunkedTags;
+		}
+		for(List<CompTaggedWord> comp : tagged) {
 			if(matchesInner(pattern, comp)) {
 				Pair<CompTaggedWord, CompTaggedWord> pair = getPairFromSentence(pattern, comp);
 				pairs.add(pair);
@@ -217,7 +227,17 @@ public class Sequence implements SequentialPattern {
 	 */
 	@Override
 	public boolean matches(SequentialPattern pattern) {
-		for(List<CompTaggedWord> innerList : taggedWords) {
+		List<List<CompTaggedWord>> comp = null;
+		if(pattern.isLexical()) {
+			comp = taggedWords;
+		}
+		else if(pattern.isGeneralized() || pattern.isSpecialized()) {
+			if(phraseChunkedTags == null) {
+				phraseChunker();
+			}
+			comp = phraseChunkedTags;
+		}
+		for(List<CompTaggedWord> innerList : comp) {
 			if(matchesInner(pattern, innerList)) {
 				return true;
 			}
@@ -323,7 +343,7 @@ public class Sequence implements SequentialPattern {
 	}
 
 	@SuppressWarnings("unused")
-	public List<List<CompTaggedWord>> phraseChunker() {
+	public void phraseChunker() {
 		/*
 		 * Heuristic rules
 		 * NP* -> NP
@@ -400,8 +420,7 @@ public class Sequence implements SequentialPattern {
 			}
 			chunked.add(chunks);
 		}
-		return chunked;
-
+		phraseChunkedTags = chunked;
 	}
 
 	public void replaceComparators(Pair<CompTaggedWord, CompTaggedWord> pair) {

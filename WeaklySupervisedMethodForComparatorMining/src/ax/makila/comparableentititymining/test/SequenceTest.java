@@ -155,7 +155,8 @@ public class SequenceTest {
 		List<CompTaggedWord> expected = new ArrayList<CompTaggedWord>(
 				Arrays.asList(new CompTaggedWord[]{e0, e1, e2, e3, e4, e5}));
 
-		List<List<CompTaggedWord>> output = seq.phraseChunker();
+		seq.phraseChunker();
+		List<List<CompTaggedWord>> output = seq.phraseChunkedTags;
 		List<CompTaggedWord> out = output.get(0);
 
 		assertArrayEquals(expected.toArray(new CompTaggedWord[expected.size()]),
