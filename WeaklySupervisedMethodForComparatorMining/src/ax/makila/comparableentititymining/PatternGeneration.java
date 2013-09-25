@@ -37,50 +37,53 @@ public class PatternGeneration {
 			Set<SequentialPattern> lexPatterns) {
 		Set<SequentialPattern> generalizedPatterns = new HashSet<SequentialPattern>();
 		for(SequentialPattern sequence : lexPatterns) {
-			List<List<CompTaggedWord>> taggedSequence = sequence.getTaggedWords();
-			for(List<CompTaggedWord> comp : taggedSequence) {
-				//Checks if the string starts or ends with #start or #end
-				int start = 0;
-				int end = 0;
-				if(comp.get(0).tag().equals("#")) {
-					start = 1;
-				}
-				if(comp.get(comp.size() - 1).tag().equals("#")) {
-					end = 1;
-				}
-				//Sets a max limit to reduce the processing time
-				int numBits = Math.min(comp.size(), 12);
-				int max = (int) Math.pow(2, numBits - start - 1);
-				for(int i = 1 + start; i <= max; i += 1 + end) {
-					String format = "%" + numBits + "s";
-					String bin = String.format(format, Integer.toBinaryString(i))
-							.replace(' ', '0');
-					char[] binary = bin.toCharArray();
-					//A 1 in the binary array tells us that the word in that location
-					//in the sequence should be replaced by its pos tag
-					StringBuilder sb = new StringBuilder();
-					for(int j = 0; j < binary.length; j++) {
-						CompTaggedWord replace = comp.get(j);
-						if(binary[j] == '1') {
-							//Ignore comparators
-							if(!replace.value().equals("$c")) {
-								sb.append(replace.toString());
-							}
-							else {
-								sb.append(replace.value());
-							}
-							sb.append(" ");
+			List<List<CompTaggedWord>> list = sequence.getTaggedWords();
+			List<CompTaggedWord> comp = new ArrayList<CompTaggedWord>();
+			for(List<CompTaggedWord> innerList : list) {
+				comp.addAll(innerList);
+			}
+			//Checks if the string starts or ends with #start or #end
+			int start = 0;
+			int end = 0;
+			if(comp.get(0).tag().equals("#")) {
+				start = 1;
+			}
+			if(comp.get(comp.size() - 1).tag().equals("#")) {
+				end = 1;
+			}
+			//Sets a max limit to reduce the processing time
+			int numBits = Math.min(comp.size(), 12);
+			int max = (int) Math.pow(2, numBits - start - 1);
+			for(int i = 1 + end; i <= max; i += 1 + end) {
+				String format = "%" + numBits + "s";
+				String bin = String.format(format, Integer.toBinaryString(i))
+						.replace(' ', '0');
+				char[] binary = bin.toCharArray();
+				//A 1 in the binary array tells us that the word in that location
+				//in the sequence should be replaced by its pos tag
+				StringBuilder sb = new StringBuilder();
+				for(int j = 0; j < binary.length; j++) {
+					CompTaggedWord replace = comp.get(j);
+					if(binary[j] == '1') {
+						//Ignore comparators
+						if(!replace.value().equals("$c")) {
+							sb.append(replace.toString());
 						}
 						else {
 							sb.append(replace.value());
-							sb.append(" ");
 						}
+						sb.append(" ");
 					}
-					String s = PTBTokenizer.ptb2Text(sb.toString());
-					SequentialPattern seqPattern = new GeneralizedSequence(s);
-					generalizedPatterns.add(seqPattern);
+					else {
+						sb.append(replace.value());
+						sb.append(" ");
+					}
 				}
+				String s = PTBTokenizer.ptb2Text(sb.toString());
+				SequentialPattern seqPattern = new GeneralizedSequence(s);
+				generalizedPatterns.add(seqPattern);
 			}
+
 		}
 		return generalizedPatterns;
 	}
@@ -146,23 +149,26 @@ public class PatternGeneration {
 		for (int i = 0; i < combinedPatterns.size(); i++) {
 			SequentialPattern pattern = combinedPatterns.get(i);
 			List<List<CompTaggedWord>> tokens = pattern.getTaggedWords();
-			for(List<CompTaggedWord> list : tokens) {
-				if(list.toString().matches(regex)) {
-					StringBuilder sb = new StringBuilder();
-					for(CompTaggedWord tag : list) {
-						if(tag.value().equals("$c")) {
-							sb.append(tag.toString());
-						}
-						else {
-							sb.append(tag.value());
-						}
-						sb.append(" ");
-					}
-					String sequence = PTBTokenizer.ptb2Text(sb.toString());
-					SequentialPattern seq = new SpecializedSequence(sequence);
-					specializedPatterns.add(seq);
-				}
+			List<CompTaggedWord> list = new ArrayList<CompTaggedWord>();
+			for(List<CompTaggedWord> innerList : tokens) {
+				list.addAll(innerList);
 			}
+			if(list.toString().matches(regex)) {
+				StringBuilder sb = new StringBuilder();
+				for(CompTaggedWord tag : list) {
+					if(tag.value().equals("$c")) {
+						sb.append(tag.toString());
+					}
+					else {
+						sb.append(tag.value());
+					}
+					sb.append(" ");
+				}
+				String sequence = PTBTokenizer.ptb2Text(sb.toString());
+				SequentialPattern seq = new SpecializedSequence(sequence);
+				specializedPatterns.add(seq);
+			}
+
 		}
 		return specializedPatterns;
 	}
@@ -185,24 +191,33 @@ public class PatternGeneration {
 		return counter > beta;
 	}
 
-	public static List<String> mineGoodPatterns(
+	public static List<SequentialPattern> mineGoodPatterns(
 			List<Pair<CompTaggedWord, CompTaggedWord>> pairs,
 			List<Sequence> comparativeQuestionSet) {
 
+		List<SequentialPattern> reliableIEPs = new ArrayList<SequentialPattern>();
+
 		Set<SequentialPattern> lexicalPatterns = generateLexicalPatterns(comparativeQuestionSet);
-		System.out.println("No. of lexical paqtterns: " + lexicalPatterns.size());
+		System.out.println("No. of lexical patterns: " + lexicalPatterns.size());
 		Set<SequentialPattern> generalizedPatterns = generateGeneralizedPatterns(lexicalPatterns);
 		System.out.println("No. of generalized patterns: " + generalizedPatterns.size());
 		Set<SequentialPattern> specializedPatterns = generateSpecializedPatterns(
 				lexicalPatterns, generalizedPatterns);
 		System.out.println("No. of specialized patterns: " + specializedPatterns.size());
-
 		Set<SequentialPattern> allPatterns = new HashSet<SequentialPattern>(lexicalPatterns);
 		allPatterns.addAll(generalizedPatterns);
 		allPatterns.addAll(specializedPatterns);
 		System.out.println("Total no. of patterns " + allPatterns.size());
+
+		for(SequentialPattern pattern : allPatterns) {
+			PatternEvaluation eval = new PatternEvaluation(pairs, pattern, comparativeQuestionSet);
+			if(eval.isReliable()) {
+				System.out.println("RELIABLE!");
+				reliableIEPs.add(pattern);
+			}
+		}
 		//Do some fancy pattern eval
-		return null;
+		return reliableIEPs;
 	}
 
 }
