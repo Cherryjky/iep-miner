@@ -1,16 +1,29 @@
 package ax.makila.comparableentititymining;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
+import ax.makila.comparableentititymining.postagger.CompTaggedWord;
+import ax.makila.comparableentititymining.sequentialpatterns.Sequence;
+import ax.makila.comparableentititymining.sequentialpatterns.SequentialPattern;
+
 public class PatternEvaluation {
-	String[] questionSet = null;
-	List<Pair<String,String>> reliablePairRepository = new ArrayList<Pair<String,String>>();
-	List<Pair<String,String>> likelyReliablePairRepository = new ArrayList<Pair<String,String>>();
+	public List<Sequence> questionSet = null;
+	public List<Pair<CompTaggedWord, CompTaggedWord>> reliablePairRepository = new ArrayList<Pair<CompTaggedWord,CompTaggedWord>>();
+	List<Pair<CompTaggedWord, CompTaggedWord>> likelyReliablePairRepository = new ArrayList<Pair<CompTaggedWord,CompTaggedWord>>();
+	public SequentialPattern pattern;
 	double gamma = MiningIndicativeExtractionPatterns.gamma;
 	double lambda = MiningIndicativeExtractionPatterns.lambda;
 	double alpha = MiningIndicativeExtractionPatterns.alpha;
-	
+
+	public PatternEvaluation(List<Pair<CompTaggedWord, CompTaggedWord>> pairs,
+			SequentialPattern pattern, List<Sequence> questionSet) {
+		this.reliablePairRepository = pairs;
+		this.pattern = pattern;
+		this.questionSet = questionSet;
+	}
+
 	/**
 	 * A pattern is reliable if it's reliability score is more than a threshold
 	 * gamma. The reliability score is determined by formula (1), (2), (3) and
@@ -20,9 +33,35 @@ public class PatternEvaluation {
 	 * @return true if reliability score for patterns is higher than threshold
 	 *         gamma, else false.
 	 */
-	public boolean isReliable(String pattern) {
-		double score = rkFinal(pattern);
+	public boolean isReliable() {
+		double score = reliabilityScoreFinal(pattern);
 		return score > gamma;
+	}
+
+	/**
+	 * Using likely reliable pairs, lookahead reliability score R^(pi) is defined
+	 * as (3) in the paper.
+	 * @param pi The candidate pattern to be evaluated
+	 * @return The lookahead reliability score for pattern <tt>pi</tt>
+	 */
+	public double lookAheadReliabilityScore(SequentialPattern pattern) {
+		int cpiExtract = 0;
+		int patternContains = 0;
+		for (Pair<CompTaggedWord, CompTaggedWord> p : likelyReliablePairRepository) {
+			for(Sequence seq : questionSet) {
+				List<Pair<CompTaggedWord, CompTaggedWord>> extractedPairs = seq.getPairs(pattern);
+				if(extractedPairs.contains(p)) {
+					cpiExtract++;
+				}
+			}
+		}
+		for(Sequence q : questionSet) {
+			if(q.matches(pattern)) {
+				patternContains++;
+			}
+		}
+		double score = (double) cpiExtract / (double) patternContains;
+		return score;
 	}
 
 	/**
@@ -36,42 +75,20 @@ public class PatternEvaluation {
 	 * @return The number of questions that pi can extract cpj from
 	 */
 	@SuppressWarnings("unused")
-	private int nq(String pi, String cpj) {
+	public int numberOfQuestionsSatisfyingCondition(SequentialPattern pi, Pair<CompTaggedWord, CompTaggedWord> cpj) {
 		int counter = 0;
 		if (cpj.equals("*")) {
-			for (String q : questionSet) {
-				if (q.contains(pi)) {
+			for (Sequence q : questionSet) {
+				if (q.matches(pi)) {
 					counter++;
 				}
 			}
 		} else {
-			for (String q : questionSet) {
+			for (Sequence q : questionSet) {
 				// if(extract(pi, questionSet).equals(cpj)) {
 				counter++;
 				// }
 			}
-		}
-		return counter;
-	}
-
-	/**
-	 * Support is defined as the support S for comparator pair cpi_roof which
-	 * can be extracted by P_roof^k and does not exist in the current reliable
-	 * set.
-	 * @param pk_roof A candidate pattern which can extract cpi_roof
-	 * @param cpi_roof The comparator pair which can be extracted by pk_roof and does
-	 *            not exist in {@link #reliablePairRepository}
-	 * @return The support count for pattern p given the definition above
-	 */
-	@SuppressWarnings("unused")
-	private int support(String pk_roof, String cpi_roof) {
-		int counter = 0;
-		for (String q : questionSet) {
-			// if(extract(pk_roof, q).equals(cpi_roof)) {
-			if (!reliablePairRepository.contains(cpi_roof)) {
-				counter++;
-			}
-			// }
 		}
 		return counter;
 	}
@@ -90,45 +107,72 @@ public class PatternEvaluation {
 	 *            The pattern for which the reliability score will be generated
 	 * @return The reliability score for pattern pi
 	 */
-	private double rk(String pi) {
+	public double reliabilityScore(SequentialPattern pattern) {
 		int cpiExtract = 0;
 		int patternContains = 0;
-		for (@SuppressWarnings("unused") Pair<String, String> p : reliablePairRepository) {
-			//If p can be extracted by pi {
-				cpiExtract++;
+		for (Pair<CompTaggedWord, CompTaggedWord> p : reliablePairRepository) {
+			for(Sequence seq : questionSet) {
+				List<Pair<CompTaggedWord, CompTaggedWord>> extractedPairs = seq.getPairs(pattern);
+				if(extractedPairs.contains(p)) {
+					cpiExtract++;
+				}
+			}
 		}
-		for(String q : questionSet) {
-			if(q.contains(pi)) {
+		for(Sequence q : questionSet) {
+			if(q.matches(pattern)) {
 				patternContains++;
 			}
+		}
+		if(patternContains == 0) {
+			//System.out.println(pattern);
 		}
 		double score = (double) cpiExtract / (double) patternContains;
 		return score;
 	}
-	
+
 	/**
-	 * Using likely reliable pairs, lookahead reliability score R^(pi) is defined
-	 * as (3) in the paper. 
-	 * @param pi The candidate pattern to be evaluated
-	 * @return The lookahead reliability score for pattern <tt>pi</tt>
-	 */
-	private double rkRoof(String pi) {	
-		int cpiRoofExtract = 0;
-		int patternContains = 0;
-		return alpha;
-	}
-	
-	/**
-	 * By interpolating (1) (= {@link #rk(String)}) and (3) (= {@link #rkRoof(String)}), the final reliability score
-	 * rkPi for a pattern is defined as below. 
+	 * By interpolating (1) (= {@link #reliabilityScore(String)}) and (3) (= {@link #lookAheadReliabilityScore(String)}), the final reliability score
+	 * rkPi for a pattern is defined as below.
 	 * @param pi A candidate pattern
 	 * @return Pattern <tt>pi</tt>'s reliability score
 	 */
-	private double rkFinal(String pi) {
-		double first = lambda * rk(pi);
-		double second = (1 - lambda) * rkRoof(pi);
+	public double reliabilityScoreFinal(SequentialPattern pi) {
+		double first = lambda * reliabilityScore(pi);
+		double second = (1 - lambda) * lookAheadReliabilityScore(pi);
 		return first + second;
 	}
-	
-	
+
+	/**
+	 * Support is defined as the support S for comparator pair cpi_roof which
+	 * can be extracted by P_roof^k and does not exist in the current reliable
+	 * set.
+	 * @param pattern A candidate pattern which can extract cpi_roof
+	 * @param pair The comparator pair which can be extracted by pk_roof and does
+	 *            not exist in {@link #reliablePairRepository}
+	 * @return The support count for pattern p given the definition above
+	 */
+	public void support(SequentialPattern pattern) {
+		HashMap<Pair<CompTaggedWord, CompTaggedWord>, Integer> hash = new HashMap<Pair<CompTaggedWord, CompTaggedWord>, Integer>();
+		for (Sequence q : questionSet) {
+			List<Pair<CompTaggedWord, CompTaggedWord>> extractedPairs = q.getPairs(pattern);
+			for(Pair<CompTaggedWord, CompTaggedWord> pair : extractedPairs) {
+				if (!reliablePairRepository.contains(pair)) {
+					if(hash.containsKey(pair)) {
+						int i = hash.get(pair);
+						i++;
+						hash.put(pair, i);
+					}
+					else {
+						hash.put(pair, 1);
+					}
+				}
+			}
+		}
+		for(Pair<CompTaggedWord, CompTaggedWord> pair : hash.keySet()) {
+			int i = hash.get(pair);
+			if(i > alpha) {
+				likelyReliablePairRepository.add(pair);
+			}
+		}
+	}
 }
