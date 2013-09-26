@@ -296,7 +296,25 @@ public class StanfordPosTagger {
 				sb.append(" ");
 			}
 		}
-		return sb.toString();
+
+		String temp = sb.toString();
+		temp = temp.replace("\\", "");
+
+		String s  = PTBTokenizer.ptbToken2Text(sb.toString());
+
+		if(temp.contains("?/.")) {
+			s = s.replace("/.", "?/.");
+		}
+		else if(temp.contains("!/.")) {
+			s = s.replace("/.", "!/.");
+		}
+		else if(temp.contains("./.")) {
+			s = s.replace("/.", "./.");
+		}
+
+
+
+		return s.toString();
 	}
 
 	/**
@@ -308,7 +326,6 @@ public class StanfordPosTagger {
 	 */
 	public static String tokensToString(List<List<String>> list, String regex) {
 		Iterator<List<String>> it = list.iterator();
-		StringBuilder sb = new StringBuilder();
 		while(it.hasNext()) {
 			List<String> sub = it.next();
 			if(!sub.toString().matches(regex)) {

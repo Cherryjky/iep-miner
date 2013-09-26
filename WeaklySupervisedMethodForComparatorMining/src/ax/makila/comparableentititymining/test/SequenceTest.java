@@ -1,6 +1,7 @@
 package ax.makila.comparableentititymining.test;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -23,14 +24,17 @@ public class SequenceTest {
 
 	@Test
 	public void testEqualsObject() {
-		fail("Not yet implemented");
+		SequentialPattern pattern1 = new GeneralizedSequence("Is there really a fight of $c vs $c? #end");
+		SequentialPattern pattern2 = new LexicalSequence("Is there really a fight of $c vs $c? #end");
+
+		assertEquals(pattern1, pattern2);
 	}
 
 	@Test
 	public void testGetPairs() {
 		Sequence seq = new Sequence("is there really a fight of pikachu vs bulbasaur?");
 		seq.set();
-		SequentialPattern pattern = new SpecializedSequence("#start is there/EX really a/DT fight of/IN $c/NN vs $c/NN? #end");
+		SequentialPattern pattern = new SpecializedSequence("Is there really a/DT fight/NN of $c/NN vs/CC $c/NN?/. #end");
 
 		seq.getPairs(pattern);
 	}
@@ -107,6 +111,10 @@ public class SequenceTest {
 
 		SequentialPattern pattern6 = new SpecializedSequence("really a fight of $c/NN vs/CC $c/NN?/. #end");
 		assertTrue(seq4.matches(pattern6));
+
+		SequentialPattern pattern7 = new SpecializedSequence("Is there really/RB a/DT fight of $c/NN vs/CC $c/NN?/. #end");
+		System.out.println(pattern7.getTokenizedVersion());
+		assertTrue(seq4.matches(pattern7));
 
 	}
 
@@ -208,7 +216,10 @@ public class SequenceTest {
 
 	@Test
 	public void testToString() {
-		fail("Not yet implemented");
+		SequentialPattern pattern = new SpecializedSequence("#start is there/EX really a/DT fight of/IN $c/NN vs $c/NN?/. #end");
+		String expected = "#start is there/EX really a/DT fight of/IN $c/NN vs $c/NN?/. #end";
+		String out = pattern.toString();
+		assertEquals(expected, out);
 	}
 
 }

@@ -4,7 +4,7 @@ import java.util.List;
 
 import ax.makila.comparableentititymining.postagger.CompTaggedWord;
 
-public interface SequentialPattern {
+public interface SequentialPattern extends Comparable<SequentialPattern> {
 	public List<String> getReplacedComparatorSequence();
 
 	public String getReplacedComparatorText();
@@ -15,6 +15,8 @@ public interface SequentialPattern {
 
 	public List<String> getTokenizedVersion();
 
+	public List<List<String>> getTokens();
+
 	public boolean hasReplacedComparators();
 
 	public boolean isGeneralized();
@@ -22,6 +24,8 @@ public interface SequentialPattern {
 	public boolean isLexical();
 
 	public boolean isSpecialized();
+
+	public int length();
 
 	public boolean matches(SequentialPattern pattern);
 

@@ -18,7 +18,36 @@ import edu.stanford.nlp.process.PTBTokenizer;
 
 @SuppressWarnings("unused")
 public class PatternGeneration {
+	public static class Percent {
+		double percent;
+		int counter = 0;
+		int total;
+		boolean proceed = true;
+
+		public Percent(int total) {
+			this.total = total;
+		}
+
+		public void increment() {
+			counter++;
+			percent = counter/total;
+		}
+
+		public double percent() {
+			return percent;
+		}
+
+		public boolean proceed() {
+			return proceed;
+		}
+
+		public void stop() {
+			proceed = false;
+		}
+
+	}
 	private static String comparator = MiningIndicativeExtractionPatterns.comparator;
+
 	//TODO: Use the real value for beta. This is just for testing
 	private static int beta = 0;//MiningIndicativeExtractionPatterns.beta;
 
@@ -99,7 +128,7 @@ public class PatternGeneration {
 	 *            The set of questions to generate patterns from
 	 * @return A set of lexical patterns
 	 */
-	public static Set<SequentialPattern> generateLexicalPatterns(List<Sequence> questions) {
+	public static Set<SequentialPattern> generateLexicalPatterns(Set<Sequence> questions) {
 		Set<SequentialPattern> lexicalPatterns = new HashSet<SequentialPattern>();
 		GeneralizedSuffixTree tree = new GeneralizedSuffixTree();
 		String regex = "(^|.*?\\s)\\$c.*?\\s\\$c[^A-Za-z0-9_$].*?$";
@@ -117,8 +146,15 @@ public class PatternGeneration {
 		// than an empirically determined number beta
 		for(String candidate : candidatePatterns) {
 			SequentialPattern lex = new LexicalSequence(candidate);
+			//Iterates through and creates twice as many patterns but with the #end tag removed to be able
+			//to match middle of sentence
+			String mod = candidate.replace(" #end", "");
+			SequentialPattern lex1 = new LexicalSequence(mod);
 			if(isFrequent(lex, questions, beta)) {
 				lexicalPatterns.add(lex);
+			}
+			if(isFrequent(lex1, questions, beta)) {
+				lexicalPatterns.add(lex1);
 			}
 		}
 		return lexicalPatterns;
@@ -181,7 +217,7 @@ public class PatternGeneration {
 	 * @param beta The threshold frequency for the pattern
 	 * @return true if the pattern exceeds the threshold, else false.
 	 */
-	private static boolean isFrequent(SequentialPattern pattern, List<Sequence> questionSet, int beta) {
+	private static boolean isFrequent(SequentialPattern pattern, Set<Sequence> questionSet, int beta) {
 		int counter = 0;
 		for(Sequence question : questionSet) {
 			if(question.matches(pattern)) {
@@ -191,33 +227,37 @@ public class PatternGeneration {
 		return counter > beta;
 	}
 
-	public static List<SequentialPattern> mineGoodPatterns(
-			List<Pair<CompTaggedWord, CompTaggedWord>> pairs,
-			List<Sequence> comparativeQuestionSet) {
+	public static Set<SequentialPattern> mineGoodPatterns(
+			Set<Pair<CompTaggedWord, CompTaggedWord>> pairs,
+			Set<Sequence> comparativeQuestionSet,
+			Set<SequentialPattern> newPatterns) {
 
-		List<SequentialPattern> reliableIEPs = new ArrayList<SequentialPattern>();
+		Set<SequentialPattern> reliableIEPs = new HashSet<SequentialPattern>();
 
 		Set<SequentialPattern> lexicalPatterns = generateLexicalPatterns(comparativeQuestionSet);
 		System.out.println("No. of lexical patterns: " + lexicalPatterns.size());
+
 		Set<SequentialPattern> generalizedPatterns = generateGeneralizedPatterns(lexicalPatterns);
 		System.out.println("No. of generalized patterns: " + generalizedPatterns.size());
 		Set<SequentialPattern> specializedPatterns = generateSpecializedPatterns(
 				lexicalPatterns, generalizedPatterns);
 		System.out.println("No. of specialized patterns: " + specializedPatterns.size());
+
 		Set<SequentialPattern> allPatterns = new HashSet<SequentialPattern>(lexicalPatterns);
 		allPatterns.addAll(generalizedPatterns);
 		allPatterns.addAll(specializedPatterns);
 		System.out.println("Total no. of patterns " + allPatterns.size());
 
 		for(SequentialPattern pattern : allPatterns) {
-			PatternEvaluation eval = new PatternEvaluation(pairs, pattern, comparativeQuestionSet);
-			if(eval.isReliable()) {
-				System.out.println("RELIABLE!");
+			//PatternEvaluation eval = new PatternEvaluation(pairs, pattern, comparativeQuestionSet);
+			//if(eval.isReliable()) {
+			//System.out.println("RELIABLE!");
+			if(!newPatterns.contains(pattern)) {
 				reliableIEPs.add(pattern);
 			}
+			//}
 		}
 		//Do some fancy pattern eval
 		return reliableIEPs;
 	}
-
 }

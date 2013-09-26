@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.StringTokenizer;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import ax.makila.comparableentititymining.Pair;
 import ax.makila.comparableentititymining.postagger.CompTaggedWord;
 import ax.makila.comparableentititymining.postagger.StanfordPosTagger;
@@ -20,7 +22,7 @@ public class Sequence implements SequentialPattern {
 	private List<List<CompTaggedWord>> taggedWords;
 	protected final String text;
 	protected List<List<String>> tokens;
-	private final List<String> tokenized = new ArrayList<String>();
+	protected List<String> tokenized = new ArrayList<String>();
 	public List<List<CompTaggedWord>> phraseChunkedTags;
 
 
@@ -47,6 +49,16 @@ public class Sequence implements SequentialPattern {
 		}
 	}
 
+
+
+
+
+	@Override
+	public int compareTo(SequentialPattern o) {
+		// TODO Auto-generated method stub
+		return toString.compareTo(o.toString());
+	}
+
 	@Override
 	public boolean equals(Object other) {
 		if(other == null) {
@@ -54,7 +66,7 @@ public class Sequence implements SequentialPattern {
 		}
 		else if(other instanceof SequentialPattern) {
 			SequentialPattern pattern = (SequentialPattern) other;
-			return text.equals(pattern.text());
+			return toString.equals(pattern.toString());
 		} else {
 			return false;
 		}
@@ -134,8 +146,6 @@ public class Sequence implements SequentialPattern {
 		return pair;
 	}
 
-
-
 	public List<Pair<CompTaggedWord, CompTaggedWord>> getPairs(SequentialPattern pattern) {
 		List<Pair<CompTaggedWord, CompTaggedWord>> pairs = new ArrayList<Pair<CompTaggedWord,CompTaggedWord>>();
 		List<List<CompTaggedWord>> tagged = null;
@@ -148,18 +158,23 @@ public class Sequence implements SequentialPattern {
 			}
 			tagged = phraseChunkedTags;
 		}
+		boolean anyMatch = false;
 		for(List<CompTaggedWord> comp : tagged) {
 			if(matchesInner(pattern, comp)) {
 				Pair<CompTaggedWord, CompTaggedWord> pair = getPairFromSentence(pattern, comp);
 				pairs.add(pair);
+				anyMatch = true;
 			}
 		}
+		if(!anyMatch) {
+			return null;
+		}
+
 		comparatorReplacedSequence = StanfordPosTagger.tokensToSequence(tokenizedComparatorSequences);
 
 		comparatorReplaced = StanfordPosTagger.tokensToString(tokenizedComparatorSequences);
 		return pairs;
 	}
-
 	@Override
 	public List<String> getReplacedComparatorSequence() {
 		return comparatorReplacedSequence;
@@ -189,9 +204,26 @@ public class Sequence implements SequentialPattern {
 		}
 		return taggedWords;
 	}
+
 	@Override
 	public List<String> getTokenizedVersion() {
 		return tokenized;
+	}
+
+
+
+
+	@Override
+	public List<List<String>> getTokens() {
+		return tokens;
+	}
+
+	@Override
+	public int hashCode() {
+		return new HashCodeBuilder(17, 31). // two randomly chosen prime numbers
+				// if deriving: appendSuper(super.hashCode()).
+				append(toString).
+				toHashCode();
 	}
 
 	@Override
@@ -204,7 +236,6 @@ public class Sequence implements SequentialPattern {
 		}
 	}
 
-
 	@Override
 	public boolean isGeneralized() {
 		return false;
@@ -215,13 +246,23 @@ public class Sequence implements SequentialPattern {
 		return false;
 	}
 
+	/*public void setComparatorReplaced(List<String> replacedComparators) {
+		List<List<String>> temp = new ArrayList<List<String>>();
+		temp.add(replacedComparators);
+		String text = StanfordPosTagger.tokensToString(temp);
+		List<List<String>> tokens = StanfordPosTagger.tokenizeStringMergeComp(text);
+		comparatorReplacedSequence = StanfordPosTagger.tokensToSequence(tokens);
+	}*/
+
 	@Override
 	public boolean isSpecialized() {
 		return false;
 	}
 
-
-
+	@Override
+	public int length() {
+		return tokenized.size();
+	}
 
 	/**
 	 * Checks if the sequential pattern <tt>pattern</tt> matches the text that this object contains,
@@ -251,6 +292,7 @@ public class Sequence implements SequentialPattern {
 		return false;
 	}
 
+
 	/**
 	 * Checks if the sequential pattern <tt>pattern</tt> matches the pos-tagged, tokenized version
 	 * of the text that this object contains, <tt>comp</tt>. If the pattern matches, returns true
@@ -268,8 +310,8 @@ public class Sequence implements SequentialPattern {
 		boolean match = false;
 		for(int i = 0; i < comp.size(); i++) {
 			CompTaggedWord word = comp.get(i);
-			String token = tokenized.get(tokenIndex);
-			if(tokenIndex < tokenized.size()) {
+			if(tokenIndex < tokenized.size() && tokenIndex < tokenized.size()) {
+				String token = tokenized.get(tokenIndex);
 				if(pattern.isLexical()) {
 					if(token.equals("$c") || word.value().equals(token)) {
 						tokenIndex++;
@@ -481,6 +523,7 @@ public class Sequence implements SequentialPattern {
 		comparatorReplaced = StanfordPosTagger.tokensToString(tokenizedComparatorSequences);
 	}
 
+
 	public void set() {
 		//A tokenized version of the input text with #start and #end added
 		tokens = StanfordPosTagger.tokenizeStringMergeCompAddLimiters(text);
@@ -490,23 +533,19 @@ public class Sequence implements SequentialPattern {
 
 	}
 
-	/*public void setComparatorReplaced(List<String> replacedComparators) {
-		List<List<String>> temp = new ArrayList<List<String>>();
-		temp.add(replacedComparators);
-		String text = StanfordPosTagger.tokensToString(temp);
-		List<List<String>> tokens = StanfordPosTagger.tokenizeStringMergeComp(text);
-		comparatorReplacedSequence = StanfordPosTagger.tokensToSequence(tokens);
-	}*/
-
 	@Override
 	public void setTaggedWords(List<List<CompTaggedWord>> sequence) {
 		taggedWords = sequence;
 	}
 
+
 	@Override
 	public String text() {
 		return text;
 	}
+
+
+
 
 	@Override
 	public String toString() {
@@ -520,7 +559,5 @@ public class Sequence implements SequentialPattern {
 		}
 		return toString;
 	}
-
-
 
 }

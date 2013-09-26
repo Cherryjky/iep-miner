@@ -4,8 +4,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -18,8 +19,8 @@ import ax.makila.comparableentititymining.sequentialpatterns.SequentialPattern;
 import ax.makila.comparableentititymining.sequentialpatterns.patterns.SpecializedSequence;
 
 public class PatternEvaluationTest {
-	List<Pair<CompTaggedWord, CompTaggedWord>> pairs =
-			new ArrayList<Pair<CompTaggedWord, CompTaggedWord>>();
+	Set<Pair<CompTaggedWord, CompTaggedWord>> pairs =
+			new HashSet<Pair<CompTaggedWord, CompTaggedWord>>();
 
 	Pair<CompTaggedWord, CompTaggedWord> pair;
 
@@ -118,10 +119,10 @@ public class PatternEvaluationTest {
 	"What does it mean when a guy doesn't text you back?" };
 
 
-	List<Sequence> questionSet = preProcessQuestions(yahooAnswers);
+	Set<Sequence> questionSet = preProcessQuestions(yahooAnswers);
 
-	private List<Sequence> preProcessQuestions(String[] questions) {
-		List<Sequence> sequences = new ArrayList<Sequence>();
+	private Set<Sequence> preProcessQuestions(String[] questions) {
+		Set<Sequence> sequences = new HashSet<Sequence>();
 		for(String q : questions) {
 			Sequence sequence = new Sequence(q);
 			sequence.set();
@@ -130,6 +131,7 @@ public class PatternEvaluationTest {
 		return sequences;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Before
 	public void setUp() {
 		for(Sequence seq : questionSet) {
@@ -137,7 +139,7 @@ public class PatternEvaluationTest {
 			pairs.addAll(p);
 		}
 
-		pair = pairs.get(0);
+		pair = pairs.toArray(new Pair[pairs.size()])[pairs.size() - 1];
 	}
 
 	@Test

@@ -1,7 +1,9 @@
 package ax.makila.comparableentititymining;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import ax.makila.comparableentititymining.postagger.CompTaggedWord;
 import ax.makila.comparableentititymining.sequentialpatterns.Sequence;
@@ -43,10 +45,10 @@ public class MiningIndicativeExtractionPatterns {
 	 */
 	public static final String[] yahooAnswers = {
 		// comparable questions x 19
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
+		"Is it better to be pikachu and happy or bulbasaur and stressed?",
+		"Is it better to be cat and happy or dog and stressed?",
+		"Is it better to be pikachu and happy or dog and stressed?",
+		"Is it better to be bulbasaur and happy or dog and stressed?",
 		"Is it better to be unhealthy and happy or good looking and stressed?",
 		"Is it better to be unhealthy and happy or good looking and stressed?",
 		"Is it better to be unhealthy and happy or good looking and stressed?",
@@ -110,7 +112,7 @@ public class MiningIndicativeExtractionPatterns {
 		"sonic vs knuckles?",
 		"sonic vs mario?",
 		"android vs ios?",
-		"Is there really a fight of pikachu vs bulbasaur?",
+		"Is there really a fight between pikachu or bulbasaur?",
 		"iPhone vs Galaxy?",
 		"Which City Is Better, NYC or Paris?",
 		// Non-comparable questions x 18
@@ -158,7 +160,7 @@ public class MiningIndicativeExtractionPatterns {
 	 */
 	public MiningIndicativeExtractionPatterns() {
 		List<Sequence> questions = preProcessQuestions(yahooAnswers);
-		List<Pair<CompTaggedWord, CompTaggedWord>> seedPairs = extractSeedComparators(initialIEP, questions);
+		Set<Pair<CompTaggedWord, CompTaggedWord>> seedPairs = extractSeedComparators(initialIEP, questions);
 		iepMining(questions, seedPairs);
 	}
 
@@ -176,7 +178,7 @@ public class MiningIndicativeExtractionPatterns {
 	 *         to the comparator pairs.
 	 */
 	private List<Sequence> comparativeQuestionIdentify(
-			List<Pair<CompTaggedWord, CompTaggedWord>> pairs, List<Sequence> questions) {
+			Set<Pair<CompTaggedWord, CompTaggedWord>> pairs, List<Sequence> questions) {
 		List<Sequence> comparativeQuestions = new ArrayList<Sequence>();
 		for (Sequence question : questions) {
 			for(Pair<CompTaggedWord, CompTaggedWord> pair : pairs) {
@@ -194,10 +196,34 @@ public class MiningIndicativeExtractionPatterns {
 		return comparativeQuestions;
 	}
 
-	@SuppressWarnings("unused")
-	private List<String> extractComparableComparators(List<String> iep, String q) {
-		// TODO Auto-generated method stub
-		return null;
+	private Pair<CompTaggedWord, CompTaggedWord> extractComparableComparators(Set<SequentialPattern> iep, Sequence question) {
+		//The maximum length strategy is used to extract the comparators. The longest matching pattern is
+		//considered to be more reliable
+		SequentialPattern winner = null;
+
+		for(SequentialPattern pattern : iep) {
+			if(question.matches(pattern)) {
+				if(winner == null) {
+					winner = pattern;
+				}
+				else if(pattern.length() > winner.length()) {
+					winner = pattern;
+				}
+			}
+		}
+
+		List<Pair<CompTaggedWord, CompTaggedWord>> list = null;
+
+		if(winner != null) {
+			list = question.getPairs(winner);
+		}
+
+		if(list != null) {
+			return list.get(0);
+		}
+		else {
+			return null;
+		}
 	}
 
 	/**
@@ -209,9 +235,9 @@ public class MiningIndicativeExtractionPatterns {
 	 * @param questions
 	 * @return A list containing comparator pairs extracted from the sentence
 	 */
-	private List<Pair<CompTaggedWord, CompTaggedWord>> extractSeedComparators(
+	private Set<Pair<CompTaggedWord, CompTaggedWord>> extractSeedComparators(
 			SequentialPattern bootstrappingIEP, List<Sequence> questions) {
-		List<Pair<CompTaggedWord, CompTaggedWord>> pairs = new ArrayList<Pair<CompTaggedWord,CompTaggedWord>>();
+		Set<Pair<CompTaggedWord, CompTaggedWord>> pairs = new HashSet<Pair<CompTaggedWord,CompTaggedWord>>();
 		//TODO: Remember to do phrase chunking for specialized and generalized patterns!!!
 		for (Sequence q : questions) {
 			if(q.matches(bootstrappingIEP)) {
@@ -245,36 +271,58 @@ public class MiningIndicativeExtractionPatterns {
 	 * 
 	 * @return A list of reliable IEP.
 	 */
-	private List<SequentialPattern> iepMining(List<Sequence> questions, List<Pair<CompTaggedWord, CompTaggedWord>> pairs) {
-		System.out.println("Start");
+	private Set<SequentialPattern> iepMining(List<Sequence> questions, Set<Pair<CompTaggedWord, CompTaggedWord>> seedComparatorPairs) {
 		//Get seed comparator pairs
-		//List<Pair<String, String>> newComparatorPairs = new ArrayList<Pair<String, String>>(seedComparatorPairs);
+		Set<Pair<CompTaggedWord, CompTaggedWord>> newComparatorPairs = seedComparatorPairs;
 		//Contains the patterns generated during each iteration
-		List<SequentialPattern> newPatterns = new ArrayList<SequentialPattern>();
+		Set<SequentialPattern> newPatterns = new HashSet<SequentialPattern>();
 		//All the questions identified as comparative
-		List<Sequence> comparativeQuestionSet = new ArrayList<Sequence>();
+		Set<Sequence> comparativeQuestionSet = new HashSet<Sequence>();
 		//All patterns gathered from the previous iteration
-		List<SequentialPattern> iep = new ArrayList<SequentialPattern>();
+		Set<SequentialPattern> iep = new HashSet<SequentialPattern>();
+		iep.add(initialIEP);
+		int iteration = 0;
 		do {
+			iteration++;
+			System.out.println("Start iteration " + iteration);
+			//Adds all ieps found in the previous iteration
 			iep.addAll(newPatterns);
-			List<Sequence> newComparativeQuestions = comparativeQuestionIdentify(pairs, questions);
+
+			//Identifies questions the comparative pairs found so far
+			List<Sequence> newComparativeQuestions = comparativeQuestionIdentify(newComparatorPairs, questions);
+			//Adds identified comparative questions to the comparative questionset
 			comparativeQuestionSet.addAll(newComparativeQuestions);
-			for (int i = 0; i < questions.size(); i++) {
-				if (isMatchingPatterns(iep, questions.get(i))) {
-					comparativeQuestionSet.remove(i);
+
+
+			//If a pattern already matches an existing IEP, remove it from the comparative question set
+			for(Sequence seq : questions) {
+				if(isMatchingPatterns(iep, seq)) {
+					comparativeQuestionSet.remove(seq);
 				}
 			}
-			newPatterns = PatternGeneration.mineGoodPatterns(pairs, comparativeQuestionSet);
-			/*//newComparatorPairs.clear();
-			for (String q : questionArchive) {
-				List<String> comparatorPairs = extractComparableComparators(
-						iep, q);
-				if (comparatorPairs != null&& newComparatorPairs.containsAll(comparatorPairs)) {
-					// seedComparatorPairs.addAll(comparatorPairs);
+
+
+			//Get some hot new pattern to play with
+			newPatterns = PatternGeneration.mineGoodPatterns(seedComparatorPairs, comparativeQuestionSet, newPatterns);
+
+			//Remove the comparator pairs found in the previous iteration
+			newComparatorPairs.clear();
+
+			//Extract comparator pairs
+			for (Sequence q : questions) {
+				Pair<CompTaggedWord, CompTaggedWord> comparatorPairs = extractComparableComparators(iep, q);
+				if (comparatorPairs != null && !seedComparatorPairs.contains(comparatorPairs)) {
+					newComparatorPairs.add(comparatorPairs);
 				}
 			}
-			 */
 		} while (newPatterns.size() != 0);
+		System.out.println("\n****PAIRS EXTRACTED*****");
+
+		for(Pair<CompTaggedWord, CompTaggedWord> pair : newComparatorPairs) {
+			System.out.println(pair.toString());
+		}
+
+		System.out.println("\nFinished!");
 		return iep;
 	}
 
@@ -288,7 +336,7 @@ public class MiningIndicativeExtractionPatterns {
 	 *            A question that is compared with the IEPs
 	 * @return True if question matches pattern, else false.
 	 */
-	private boolean isMatchingPatterns(List<SequentialPattern> iep, Sequence q) {
+	private boolean isMatchingPatterns(Set<SequentialPattern> iep, Sequence q) {
 		for (SequentialPattern p : iep) {
 			if (q.matches(p)) {
 				return true;

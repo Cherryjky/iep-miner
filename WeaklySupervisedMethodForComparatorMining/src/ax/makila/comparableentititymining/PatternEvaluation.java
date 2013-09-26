@@ -1,24 +1,25 @@
 package ax.makila.comparableentititymining;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import ax.makila.comparableentititymining.postagger.CompTaggedWord;
 import ax.makila.comparableentititymining.sequentialpatterns.Sequence;
 import ax.makila.comparableentititymining.sequentialpatterns.SequentialPattern;
 
 public class PatternEvaluation {
-	public List<Sequence> questionSet = null;
-	public List<Pair<CompTaggedWord, CompTaggedWord>> reliablePairRepository = new ArrayList<Pair<CompTaggedWord,CompTaggedWord>>();
-	List<Pair<CompTaggedWord, CompTaggedWord>> likelyReliablePairRepository = new ArrayList<Pair<CompTaggedWord,CompTaggedWord>>();
+	public Set<Sequence> questionSet = null;
+	public Set<Pair<CompTaggedWord, CompTaggedWord>> reliablePairRepository = new HashSet<Pair<CompTaggedWord,CompTaggedWord>>();
+	Set<Pair<CompTaggedWord, CompTaggedWord>> likelyReliablePairRepository = new HashSet<Pair<CompTaggedWord,CompTaggedWord>>();
 	public SequentialPattern pattern;
 	double gamma = MiningIndicativeExtractionPatterns.gamma;
 	double lambda = MiningIndicativeExtractionPatterns.lambda;
 	double alpha = MiningIndicativeExtractionPatterns.alpha;
 
-	public PatternEvaluation(List<Pair<CompTaggedWord, CompTaggedWord>> pairs,
-			SequentialPattern pattern, List<Sequence> questionSet) {
+	public PatternEvaluation(Set<Pair<CompTaggedWord, CompTaggedWord>> pairs,
+			SequentialPattern pattern, Set<Sequence> questionSet) {
 		this.reliablePairRepository = pairs;
 		this.pattern = pattern;
 		this.questionSet = questionSet;
@@ -124,7 +125,7 @@ public class PatternEvaluation {
 			}
 		}
 		if(patternContains == 0) {
-			//System.out.println(pattern);
+			System.out.println("DUDE!");
 		}
 		double score = (double) cpiExtract / (double) patternContains;
 		return score;
