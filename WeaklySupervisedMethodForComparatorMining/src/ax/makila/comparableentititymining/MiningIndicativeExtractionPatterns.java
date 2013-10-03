@@ -1,5 +1,9 @@
 package ax.makila.comparableentititymining;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -9,140 +13,22 @@ import ax.makila.comparableentititymining.postagger.CompTaggedWord;
 import ax.makila.comparableentititymining.sequentialpatterns.Sequence;
 import ax.makila.comparableentititymining.sequentialpatterns.SequentialPattern;
 import ax.makila.comparableentititymining.sequentialpatterns.patterns.SpecializedSequence;
+import edu.stanford.nlp.util.Timing;
 
+/**
+ * Class for mining indicative extraction patterns (IEP).
+ * @author fredrik
+ *
+ */
 public class MiningIndicativeExtractionPatterns {
-	// alpha, beta, gamma, lambda parameters are determined empirically
-	// alpha determined by maximizing precision without hurting recall by
-	// investigating frequencies of pairs in a labeled set
-	/**
-	 * Used as a threshold for the support of likely reliable comparator pairs
-	 */
-	public static final double alpha = 3.0;
-	// Beta and gamma is threshold parameters
-	public static final int beta = 10;
-	/**
-	 * Used as a threshold for determining reliable patterns
-	 */
-	public static final double gamma = 0.8;
-	/**
-	 * an interpolation parameter in (4) (see paper)
-	 */
-	public static final double lambda = 0.5;
-	/**
-	 * Comparator token
-	 */
-	public static final String comparator = "$c";
-	/**
-	 * Start of sentence token
-	 */
-	public static final String start = "#start";
-	/**
-	 * End of sentence token
-	 */
-	public static final String end = "#end";
-	/**
-	 * Contains all the questions for mining
-	 */
-	public static final String[] yahooAnswers = {
-		// comparable questions x 19
-		"Is it better to be pikachu and happy or bulbasaur and stressed?",
-		"Is it better to be cat and happy or dog and stressed?",
-		"Is it better to be pikachu and happy or dog and stressed?",
-		"Is it better to be bulbasaur and happy or dog and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"Is it better to be unhealthy and happy or good looking and stressed?",
-		"are there more delicious chocolate in cookies or in old car batteris",
-		"What is better national guard or reserve?",
-		"What is the better dog food pedigree or eukanuba?",
-		"What do you prefer short boots or long boots for riding and why?",
-		"Why are games on iPhone better than Android?",
-		"What airline is better for traveling to south america american airlines or continental?",
-		"What book is better, Maximum ride the angel experiment or maximum ride schools out forever?",
-		"Which Burberry face of the year do you prefer, Rosie Huntington or Emma Watson?",
-		"Madrid vs. Barcelona: Which city is better to shop for designer brands?",
-		"London vs. Paris: Which city is better(cheaper) for shopping?",
-		"In the world, which is better 'sheeple' or 'goats'? (see details please)?",
-		"Do you prefer Old Spice or Axe?",
-		"Green vs pink?",
-		"Heaven vs hell?",
-		"Catapult vs ballista?",
-		"Pasta vs pizza?",
-		"Sonic vs Mario?",
-		"cats vs dogs?",
-		"sega vs nintendo?",
-		"nike vs adidas?",
-		"google vs yahoo?",
-		"samsung vs apple?",
-		"bamboo vs oak?",
-		"hot vs cold?",
-		"old vs young?",
-		"$c vs $c?",
-		"new vs second-hand?",
-		"water vs coffee?",
-		"pikachu vs charizard?",
-		"pikachu vs bulbasaur?",
-		"Enemies vs friends?",
-		"Cool vs hot?",
-		"derp vs herp?",
-		"sheeps vs cows?",
-		"sonic vs knuckles?",
-		"sonic vs mario?",
-		"android vs ios?",
-		"Is there really a fight between pikachu or bulbasaur?",
-		"iPhone vs Galaxy?",
-		"Which City Is Better, NYC or Paris?",
-		// Non-comparable questions x 18
-		"How to convince my parents to buy me a iphone or samsung galaxy s4?",
-		"Can I buy an iPhone at the apple store and then use it for cricket?",
-		"What kind of car is a total chick magnet?",
-		"Is the 1998 trail blazer 4x4?",
-		"What's a good anime to watch?",
-		"Does it affect you big time if you don't pass the CAHSEE exam the 1st time?",
-		"Whats the used value on a jackson SLAT3-7 guitar?" ,
-		"Merger of Cooperative bank into nationalized bank?",
-		"Is there a laser dome in or around NJ?",
-		"how can I return me deleted emails?",
-		"Anne Bradstreet's poetry? PLEASE in need of HELP?",
-		"White specks in stool, should I be concerned?",
-		"I believe I've seen death and god through pot?",
-		"I'm really tired and I need some time managment/ staying up tips please help!?",
-		"I have lots of lung mucus! Going on for 3 months now!?",
-		"is muscle confusion a good topic for a research paper on mma?",
-		"Is Social Security an outdated form of social welfare? Is it time to just mandate people to save at banks?",
-	"What does it mean when a guy doesn't text you back?" };
-
 	/**
 	 * The initial IEP to start the bootstrapping method
 	 */
 	//"#start $c/NN vs/CC $c/NN?/. #end"
-	static final SequentialPattern initialIEP = new SpecializedSequence("#start $c/NN vs $c/NN?/. #end");
+	static final SequentialPattern initialIEP = new SpecializedSequence("#start $c/NN vs/CC $c/NN?/. #end");
 
 	/**
-	 * Main method
+	 * Main method.
 	 * 
 	 * @param argsv Input
 	 */
@@ -152,22 +38,52 @@ public class MiningIndicativeExtractionPatterns {
 	}
 
 	/**
-	 * Constructor for this class. Initializes values and starts the
+	 * Constructor. Initializes values and starts the
 	 * bootstrapping method of extracting IEPs.
 	 * 
 	 * @param iep
 	 *            The initial seed IEP
 	 */
+	@SuppressWarnings("static-access")
 	public MiningIndicativeExtractionPatterns() {
+		BufferedReader in = null;
+		try {
+			in = new BufferedReader(new FileReader("megadata.txt"));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		String line;
+		List<String> yahooAnswers = new ArrayList<String>();
+		Timing t = new Timing();
+		t.startDoing("Reading data");
+		try {
+			while((line = in.readLine()) != null) {
+				yahooAnswers.add(line);
+			}
+			in.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		t.done();
+
+		t = new Timing();
+		t.startDoing("Preprocessing");
 		List<Sequence> questions = preProcessQuestions(yahooAnswers);
+		t.done();
 		Set<Pair<CompTaggedWord, CompTaggedWord>> seedPairs = extractSeedComparators(initialIEP, questions);
+		Timing total = new Timing();
+		total.start();
 		iepMining(questions, seedPairs);
+		total.done("IEP mining");
 	}
 
 	/**
-	 * For a given set of questions and a set of seed comparator pairs, for each
-	 * pair, if a text contains the pair it's regarded as a comparative
-	 * question.
+	 * Identifies questions as comparative or not. For a given set of questions
+	 * <tt>questions</tt> and a set of seed comparator pairs, <tt>pairs</tt> pairs.
+	 * for each pair in <tt>pairs</tt>, if a questions contains the pair it's regarded as
+	 * a comparative questions and the question is added to a comparative question
+	 * repository.
 	 * 
 	 * @param pairs
 	 *            The seed comparator pairs that are used to identify
@@ -196,6 +112,15 @@ public class MiningIndicativeExtractionPatterns {
 		return comparativeQuestions;
 	}
 
+	/**
+	 * Extracts comparative pairs. Given a set of identified IEPs <tt>iep</tt> and a
+	 * sequence <tt>question</tt> the comparators are extracted from the sentence. As a
+	 * sequence can match many IEPs, the longest-matching strategy is used as the longest
+	 * matching IEP is considered to be the most reliable one to extract comparators.
+	 * @param iep A set of IEPs
+	 * @param question A sequence to extract
+	 * @return A comparator pair extracted from the <tt>question</tt>
+	 */
 	private Pair<CompTaggedWord, CompTaggedWord> extractComparableComparators(Set<SequentialPattern> iep, Sequence question) {
 		//The maximum length strategy is used to extract the comparators. The longest matching pattern is
 		//considered to be more reliable
@@ -227,18 +152,17 @@ public class MiningIndicativeExtractionPatterns {
 	}
 
 	/**
-	 * Given an initial IEP used for bootstrapping it iterates over all of the
-	 * questions and try to match the IEP to the question. If it matches,
-	 * comparator pairs can be extracted from the sentence
+	 * Extracts seed comparator pairs from a set of questions. Given an initial IEP used
+	 * for bootstrapping it iterates over all of the questions and try to match the IEP
+	 * to the question. If it matches, comparator pairs is extracted from the sentence.
 	 * 
-	 * @param bootstrappingIEP
-	 * @param questions
-	 * @return A list containing comparator pairs extracted from the sentence
+	 * @param bootstrappingIEP The initial IEP for bootstrapping
+	 * @param questions The list of questions from which comparative pairs are extracted from
+	 * @return A list containing comparator pairs extracted from the questions.
 	 */
 	private Set<Pair<CompTaggedWord, CompTaggedWord>> extractSeedComparators(
 			SequentialPattern bootstrappingIEP, List<Sequence> questions) {
 		Set<Pair<CompTaggedWord, CompTaggedWord>> pairs = new HashSet<Pair<CompTaggedWord,CompTaggedWord>>();
-		//TODO: Remember to do phrase chunking for specialized and generalized patterns!!!
 		for (Sequence q : questions) {
 			if(q.matches(bootstrappingIEP)) {
 				pairs.addAll(q.getPairs(bootstrappingIEP));
@@ -248,6 +172,7 @@ public class MiningIndicativeExtractionPatterns {
 	}
 
 	/**
+	 * Generates patterns through a weekly supervised bootstrapping approach.
 	 * Does the actual work of extracting IEP through a bootstrapping approach.
 	 * The bootstrapping process starts with a single IEP. From it, we extract a
 	 * set of initial seed comparator pairs. For each comparator pair, all
@@ -262,13 +187,14 @@ public class MiningIndicativeExtractionPatterns {
 	 * questions from which reliable comparators are extracted are removed from
 	 * the collection to allow finding new patters efficiently in later
 	 * iterations. The process iterates until no more new patterns can be found
-	 * from the questions collection. The method has two key steps:
-	 * <ol>
-	 * <li>Pattern generation
-	 * <li>Pattern extraction
-	 * </ol>
-	 * @param seedPairs
+	 * from the questions collection. The method has two key steps: 1) pattern generation
+	 * 2) pattern evaluation
 	 * 
+	 * @see PatternGeneration
+	 * @see PatternEvaluation
+	 * 
+	 * @param questions The set of questions to generate patterns from
+	 * @param seedComparatorPairs A collection of initial seed comparator pairs
 	 * @return A list of reliable IEP.
 	 */
 	private Set<SequentialPattern> iepMining(List<Sequence> questions, Set<Pair<CompTaggedWord, CompTaggedWord>> seedComparatorPairs) {
@@ -280,8 +206,9 @@ public class MiningIndicativeExtractionPatterns {
 		Set<Sequence> comparativeQuestionSet = new HashSet<Sequence>();
 		//All patterns gathered from the previous iteration
 		Set<SequentialPattern> iep = new HashSet<SequentialPattern>();
-		iep.add(initialIEP);
+		//iep.add(initialIEP);
 		int iteration = 0;
+
 		do {
 			iteration++;
 			System.out.println("Start iteration " + iteration);
@@ -301,9 +228,8 @@ public class MiningIndicativeExtractionPatterns {
 				}
 			}
 
-
 			//Get some hot new pattern to play with
-			newPatterns = PatternGeneration.mineGoodPatterns(seedComparatorPairs, comparativeQuestionSet, newPatterns);
+			newPatterns = PatternGeneration.mineGoodPatterns(newComparatorPairs, comparativeQuestionSet, questions);
 
 			//Remove the comparator pairs found in the previous iteration
 			newComparatorPairs.clear();
@@ -315,6 +241,7 @@ public class MiningIndicativeExtractionPatterns {
 					newComparatorPairs.add(comparatorPairs);
 				}
 			}
+
 		} while (newPatterns.size() != 0);
 		System.out.println("\n****PAIRS EXTRACTED*****");
 
@@ -347,9 +274,33 @@ public class MiningIndicativeExtractionPatterns {
 
 
 
-	private List<Sequence> preProcessQuestions(String[] questions) {
+	/**
+	 * Preprocessed a list strings. The method iterates
+	 * over all the entries in <tt>questions</tt> and create Sequence objects from them.
+	 * Also makes sure that none of the questions contains any strange characters.
+	 * 
+	 * @see Sequence
+	 * 
+	 * @param questions The list of questions to be preprocessed
+	 * @return A list of sequences
+	 */
+	private List<Sequence> preProcessQuestions(List<String> questions) {
 		List<Sequence> sequences = new ArrayList<Sequence>();
+		double total = questions.size();
+		int steps = (int) total/10;
+		int counter = 0;
 		for(String q : questions) {
+			if(counter % steps == 0 || counter == total - 1) {
+				int percent = (int) ((counter/(total - 1))*100);
+				System.out.print(percent + "% ");
+			}
+			counter++;
+			char[] arr = q.toCharArray();
+			for(char c : arr) {
+				if(c != (char) (byte) c) {
+					q = q.replace(""+c, "");
+				}
+			}
 			Sequence sequence = new Sequence(q);
 			sequence.set();
 			sequences.add(sequence);

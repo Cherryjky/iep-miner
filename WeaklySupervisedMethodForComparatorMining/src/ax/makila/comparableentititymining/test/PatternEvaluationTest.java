@@ -1,9 +1,11 @@
 package ax.makila.comparableentititymining.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -25,6 +27,7 @@ public class PatternEvaluationTest {
 	Pair<CompTaggedWord, CompTaggedWord> pair;
 
 	SequentialPattern pattern = new SpecializedSequence("#start $c/NN vs $c/NN? #end");
+	Set<SequentialPattern> set = new HashSet<SequentialPattern>();
 
 	public static final String[] yahooAnswers = {
 		// comparable questions x 19
@@ -119,10 +122,10 @@ public class PatternEvaluationTest {
 	"What does it mean when a guy doesn't text you back?" };
 
 
-	Set<Sequence> questionSet = preProcessQuestions(yahooAnswers);
+	List<Sequence> questionSet = preProcessQuestions(yahooAnswers);
 
-	private Set<Sequence> preProcessQuestions(String[] questions) {
-		Set<Sequence> sequences = new HashSet<Sequence>();
+	private List<Sequence> preProcessQuestions(String[] questions) {
+		List<Sequence> sequences = new ArrayList<Sequence>();
 		for(String q : questions) {
 			Sequence sequence = new Sequence(q);
 			sequence.set();
@@ -136,7 +139,9 @@ public class PatternEvaluationTest {
 	public void setUp() {
 		for(Sequence seq : questionSet) {
 			List<Pair<CompTaggedWord, CompTaggedWord>> p = seq.getPairs(pattern);
-			pairs.addAll(p);
+			if(p != null) {
+				pairs.addAll(p);
+			}
 		}
 
 		pair = pairs.toArray(new Pair[pairs.size()])[pairs.size() - 1];
@@ -144,44 +149,54 @@ public class PatternEvaluationTest {
 
 	@Test
 	public void testIsReliable() {
-		fail("Not yet implemented");
+		SequentialPattern pat = new SpecializedSequence("$c/NN vs/CC $c/NN");
+		Set<SequentialPattern> list = new HashSet<SequentialPattern>();
+		list.add(pat);
+
+		PatternEvaluation eval = new PatternEvaluation(pairs, list, questionSet);
+
+		assertFalse(eval.isReliable(0));
+
 	}
 
-	@Test
-	public void testLookAheadReliabilityScore() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testNumberOfQuestionsSatisfyingCondition() {
-		fail("Not yet implemented");
-	}
 
 	@Test
 	public void testPatternEvaluation() {
-		PatternEvaluation eval = new PatternEvaluation(pairs, pattern, questionSet);
+		set.add(pattern);
+		PatternEvaluation eval = new PatternEvaluation(pairs, set, questionSet);
 		assertEquals(pairs, eval.reliablePairRepository);
-		assertEquals(pattern, eval.pattern);
+		//assertEquals(pattern, eval.pattern);
 		assertEquals(questionSet, eval.questionSet);
 	}
 
 	@Test
 	public void testReliabilityScore() {
-		PatternEvaluation eval = new PatternEvaluation(pairs, pattern, questionSet);
-		double score = eval.reliabilityScore(pattern);
-		assertTrue(score == 1.0);
+		SequentialPattern pat = new SpecializedSequence("$c/NN vs/CC $c/NN");
+		Set<SequentialPattern> list = new HashSet<SequentialPattern>();
+		list.add(pat);
+
+		PatternEvaluation eval = new PatternEvaluation(pairs, list, questionSet);
+
+		assertNotNull(eval.reliabilityScore(pat));
 	}
 
-	@Test
-	public void testReliabilityScoreFinal() {
-		fail("Not yet implemented");
-	}
 
 
 
 	@Test
 	public void testSupport() {
-		PatternEvaluation eval = new PatternEvaluation(pairs, pattern, questionSet);
+		Set<SequentialPattern> set = new HashSet<SequentialPattern>();
+		set.add(pattern);
+		List<SequentialPattern> list = new ArrayList<SequentialPattern>();
+		list.add(pattern);
+
+		Set<Pair<CompTaggedWord, CompTaggedWord>> p = new HashSet<Pair<CompTaggedWord,CompTaggedWord>>();
+
+		PatternEvaluation eval = new PatternEvaluation(p, set, questionSet);
+
+		eval.support(list);
+
+		assertTrue(eval.likelyReliablePairRepository.size() > 0);
 	}
 
 

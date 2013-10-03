@@ -11,6 +11,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import ax.makila.comparableentititymining.Pair;
 import ax.makila.comparableentititymining.postagger.CompTaggedWord;
 import ax.makila.comparableentititymining.postagger.StanfordPosTagger;
+import ax.makila.comparableentititymining.sequentialpatterns.patterns.Pattern;
 
 public class Sequence implements SequentialPattern {
 
@@ -36,7 +37,7 @@ public class Sequence implements SequentialPattern {
 		StringTokenizer tokenizer = new StringTokenizer(text);
 		while(tokenizer.hasMoreTokens()) {
 			String token = tokenizer.nextToken();
-			if(token.matches( "^.+?[\\?\\.,\\!;:].*?$")) {
+			if(token.matches( "^.+?(\\w|\\d)[\\?\\.,\\!;:].*?$")) {
 				String[] split = token.split("[\\?\\.,\\!;:]");
 				String subString = split[0];
 				String secondString = token.substring(subString.length(), token.length());
@@ -88,41 +89,51 @@ public class Sequence implements SequentialPattern {
 		List<Pair<CompTaggedWord, Integer>> candidates = new ArrayList<Pair<CompTaggedWord, Integer>>();
 		int candidateIndex = 0;
 		for(int i = 0; i < comp.size(); i++) {
-			CompTaggedWord word = comp.get(i);
-			String token = tokenized.get(tokenIndex);
-			String[] split = token.split("\\/");
-			if(split.length > 1) {
-				if(split[0].equals("$c") && word.tag().equals(split[1])) {
-					candidates.add(candidateIndex, new Pair<CompTaggedWord, Integer>(word, i));
-					candidateIndex++;
-					tokenIndex++;
-				}
-				else if(split[0].equals(word.value()) || split[1].equals(word.tag())) {
-					tokenIndex++;
-				}
-				else {
-					candidateIndex = 0;
-					tokenIndex = 0;
-				}
-			}
-			else {
-				if(token.equals("$c")) {
-					candidates.add(candidateIndex, new Pair<CompTaggedWord, Integer>(word, i));
-					candidateIndex++;
-					tokenIndex++;
-				}
-				else if(token.equals(word.value())) {
-					tokenIndex++;
+			if(tokenIndex < tokenized.size()) {
+				CompTaggedWord word = comp.get(i);
+				String token = tokenized.get(tokenIndex);
+				String[] split = token.split("\\/");
+				if(split.length > 1) {
+					if(split[0].equals("$c") && word.tag().equals(split[1])) {
+						candidates.add(candidateIndex, new Pair<CompTaggedWord, Integer>(word, i));
+						candidateIndex++;
+						tokenIndex++;
+					}
+					else if(split[0].equals(word.value()) || split[1].equals(word.tag())) {
+						tokenIndex++;
+					}
+					else {
+						candidateIndex = 0;
+						tokenIndex = 0;
+					}
 				}
 				else {
-					candidateIndex = 0;
-					tokenIndex = 0;
+					if(token.equals("$c")) {
+						candidates.add(candidateIndex, new Pair<CompTaggedWord, Integer>(word, i));
+						candidateIndex++;
+						tokenIndex++;
+					}
+					else if(token.equals(word.value())) {
+						tokenIndex++;
+					}
+					else {
+						candidateIndex = 0;
+						tokenIndex = 0;
+					}
 				}
+			} else {
+				return null;
 			}
 		}
 
+
+		if(candidates.size() < 2) {
+			return null;
+
+		}
 		int firstIndex = candidates.get(0).y;
 		int secondIndex = candidates.get(1).y;
+
 		CompTaggedWord tagged = comp.get(firstIndex);
 		tagged.setCompTag(CompTaggedWord.COMP_TAG);
 		comp.set(firstIndex, tagged);
@@ -146,6 +157,13 @@ public class Sequence implements SequentialPattern {
 		return pair;
 	}
 
+
+	/**
+	 * Gets comparator pairs from the question. Given a <tt>pattern</tt> all the pairs
+	 * are extracted. If no pairs can be extracted, null is returned.
+	 * @param pattern The pattern that can extract potential pairs
+	 * @return Comparator pairs from the sentence.
+	 */
 	public List<Pair<CompTaggedWord, CompTaggedWord>> getPairs(SequentialPattern pattern) {
 		List<Pair<CompTaggedWord, CompTaggedWord>> pairs = new ArrayList<Pair<CompTaggedWord,CompTaggedWord>>();
 		List<List<CompTaggedWord>> tagged = null;
@@ -162,8 +180,11 @@ public class Sequence implements SequentialPattern {
 		for(List<CompTaggedWord> comp : tagged) {
 			if(matchesInner(pattern, comp)) {
 				Pair<CompTaggedWord, CompTaggedWord> pair = getPairFromSentence(pattern, comp);
-				pairs.add(pair);
-				anyMatch = true;
+				if(pair != null) {
+					pairs.add(pair);
+					anyMatch = true;
+				}
+
 			}
 		}
 		if(!anyMatch) {
@@ -175,6 +196,7 @@ public class Sequence implements SequentialPattern {
 		comparatorReplaced = StanfordPosTagger.tokensToString(tokenizedComparatorSequences);
 		return pairs;
 	}
+
 	@Override
 	public List<String> getReplacedComparatorSequence() {
 		return comparatorReplacedSequence;
@@ -246,13 +268,6 @@ public class Sequence implements SequentialPattern {
 		return false;
 	}
 
-	/*public void setComparatorReplaced(List<String> replacedComparators) {
-		List<List<String>> temp = new ArrayList<List<String>>();
-		temp.add(replacedComparators);
-		String text = StanfordPosTagger.tokensToString(temp);
-		List<List<String>> tokens = StanfordPosTagger.tokenizeStringMergeComp(text);
-		comparatorReplacedSequence = StanfordPosTagger.tokensToSequence(tokens);
-	}*/
 
 	@Override
 	public boolean isSpecialized() {
@@ -310,7 +325,7 @@ public class Sequence implements SequentialPattern {
 		boolean match = false;
 		for(int i = 0; i < comp.size(); i++) {
 			CompTaggedWord word = comp.get(i);
-			if(tokenIndex < tokenized.size() && tokenIndex < tokenized.size()) {
+			if(tokenIndex < tokenized.size()) {
 				String token = tokenized.get(tokenIndex);
 				if(pattern.isLexical()) {
 					if(token.equals("$c") || word.value().equals(token)) {
@@ -477,12 +492,23 @@ public class Sequence implements SequentialPattern {
 		phraseChunkedTags = chunked;
 	}
 
+	/**
+	 * Replaces the comparators in a sentence with markers $c. Given a <tt>pair</tt>
+	 * the pair is matched againt the sentence and if both of the members of the pair
+	 * matches against two words in the question, then these are replaced with $c in.
+	 * The replaced question are stored in an internal representation that can be
+	 * accessed through {@link #getReplacedComparatorSequence()} and {@link #getReplacedComparatorText()}.
+	 * @param pair The pair to be matched against the question.
+	 */
 	public void replaceComparators(Pair<CompTaggedWord, CompTaggedWord> pair) {
 		List<String> replaced = new ArrayList<String>();
+		List<String> noReplaced = new ArrayList<String>();
 		List<List<CompTaggedWord>> comp = taggedWords;
 		List<List<String>> tokenizedString = tokens;
 		CompTaggedWord c0 = pair.x;
+		boolean checkC0 = true;
 		CompTaggedWord c1 = pair.y;
+		boolean checkC1 = true;
 		//Sanity check
 		if(comp.size() != tokenizedString.size()) {
 			try {
@@ -508,15 +534,27 @@ public class Sequence implements SequentialPattern {
 			for(int j = 0; j < compInnerList.size(); j++) {
 				CompTaggedWord tag = compInnerList.get(j);
 				String token = tokenInnerList.get(j);
-				if(token.equals(c0.value()) || token.equals(c1.value())) {
+				if(token.equals(c0.value()) && checkC0) {
 					tag.setCompTag(CompTaggedWord.COMP_TAG);
 					replaced.add("$c");
+					checkC0 = false;
+				} else if(token.equals(c1.value()) && checkC1) {
+					tag.setCompTag(CompTaggedWord.COMP_TAG);
+					replaced.add("$c");
+					checkC1 = false;
 				}
 				else {
 					replaced.add(tag.value());
 				}
+				noReplaced.add(tag.value());
 			}
-			tokenizedComparatorSequences.add(replaced);
+			if(!checkC0 && !checkC1) {
+				tokenizedComparatorSequences.add(replaced);
+			}
+			else {
+				return;
+				//tokenizedComparatorSequences.add(noReplaced);
+			}
 		}
 		comparatorReplacedSequence = StanfordPosTagger.tokensToSequence(tokenizedComparatorSequences);
 
@@ -524,6 +562,11 @@ public class Sequence implements SequentialPattern {
 	}
 
 
+	/**
+	 * Initializes values necessary for a sequence. These are not necessary
+	 * for a {@link Pattern}, which is why they are separated from the constructor.
+	 * Initializes {@link #tokens}, {@link #toString}, {@link #sequence}, {@link #taggedWords}.
+	 */
 	public void set() {
 		//A tokenized version of the input text with #start and #end added
 		tokens = StanfordPosTagger.tokenizeStringMergeCompAddLimiters(text);
@@ -543,9 +586,6 @@ public class Sequence implements SequentialPattern {
 	public String text() {
 		return text;
 	}
-
-
-
 
 	@Override
 	public String toString() {

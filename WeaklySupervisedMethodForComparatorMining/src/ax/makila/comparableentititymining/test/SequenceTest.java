@@ -3,15 +3,18 @@ package ax.makila.comparableentititymining.test;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
 
+import ax.makila.comparableentititymining.Pair;
 import ax.makila.comparableentititymining.postagger.CompTaggedWord;
 import ax.makila.comparableentititymining.sequentialpatterns.Sequence;
 import ax.makila.comparableentititymining.sequentialpatterns.SequentialPattern;
@@ -21,6 +24,26 @@ import ax.makila.comparableentititymining.sequentialpatterns.patterns.Specialize
 import edu.stanford.nlp.ling.TaggedWord;
 
 public class SequenceTest {
+	Pair<CompTaggedWord, CompTaggedWord> testPairCatsDogs;
+	Pair<CompTaggedWord, CompTaggedWord> testPairPikachuBulbasaur;
+	Pair<CompTaggedWord, CompTaggedWord> testPairCatsCats;
+
+	@Before
+	public void setUp() {
+		TaggedWord t0 = new TaggedWord("cats");
+		TaggedWord t1 = new TaggedWord("dogs");
+		TaggedWord t2 = new TaggedWord("pikachu");
+		TaggedWord t3 = new TaggedWord("bulbasaur");
+
+		CompTaggedWord c0 = new CompTaggedWord(t0);
+		CompTaggedWord c1 = new CompTaggedWord(t1);
+		CompTaggedWord c2 = new CompTaggedWord(t2);
+		CompTaggedWord c3 = new CompTaggedWord(t3);
+
+		testPairCatsDogs = new Pair<CompTaggedWord, CompTaggedWord>(c0, c1);
+		testPairPikachuBulbasaur = new Pair<CompTaggedWord, CompTaggedWord>(c2, c3);
+		testPairCatsCats = new Pair<CompTaggedWord, CompTaggedWord>(c0, c0);
+	}
 
 	@Test
 	public void testEqualsObject() {
@@ -41,47 +64,127 @@ public class SequenceTest {
 
 	@Test
 	public void testGetReplacedComparatorSequence() {
-		fail("Not yet implemented");
+		Sequence seq = new Sequence("cats vs dogs");
+		seq.set();
+		seq.replaceComparators(testPairCatsDogs);
+		List<String> s = seq.getReplacedComparatorSequence();
+		String expected = "[#start $c vs $c #end]";
+		assertEquals(s.toString(), expected);
+
+		seq = new Sequence("cats vs dogs");
+		seq.set();
+		seq.replaceComparators(testPairPikachuBulbasaur);
+		s = seq.getReplacedComparatorSequence();
+		assertNull(s);
+
+		seq = new Sequence("cats vs dogs");
+		seq.set();
+		seq.replaceComparators(testPairCatsCats);
+		s = seq.getReplacedComparatorSequence();
+		assertNull(s);
 	}
 
 	@Test
 	public void testGetReplacedComparatorText() {
-		fail("Not yet implemented");
+		Sequence seq = new Sequence("cats vs dogs");
+		seq.set();
+		seq.replaceComparators(testPairCatsDogs);
+		String s = seq.getReplacedComparatorText();
+		String expected = "#start $c vs $c #end";
+		assertEquals(s, expected);
+
+		seq = new Sequence("cats vs dogs");
+		seq.set();
+		seq.replaceComparators(testPairPikachuBulbasaur);
+		s = seq.getReplacedComparatorText();
+		expected = "#start cats vs dogs #end";
+		assertNull(s);
+
+		seq = new Sequence("cats vs dogs");
+		seq.set();
+		seq.replaceComparators(testPairCatsCats);
+		s = seq.getReplacedComparatorText();
+		assertNull(s);
 	}
 
 	@Test
 	public void testGetSequence() {
-		fail("Not yet implemented");
+		Sequence seq = new Sequence("cats vs dogs");
+		seq.set();
+		List<String> s = seq.getSequence();
+		assertEquals("[#start cats vs dogs #end]", s.toString());
+
+		seq = new Sequence("cats vs dogs. Pikachu is cool!");
+		seq.set();
+		s = seq.getSequence();
+		String s0 = s.get(0);
+		String s1 = s.get(1);
+
+		assertEquals("#start cats vs dogs. #end", s0);
+		assertEquals("#start Pikachu is cool! #end", s1);
 	}
 
 	@Test
 	public void testGetTaggedWords() {
-		fail("Not yet implemented");
+		Sequence seq = new Sequence("cat vs dog");
+		seq.set();
+		List<List<CompTaggedWord>> list = seq.getTaggedWords();
+		String expected = "[[#start/#, cat/NN, vs/CC, dog/NN, #end/#]]";
+
+		assertEquals(list.toString(), expected);
+
 	}
 
 	@Test
 	public void testGetTokenizedVersion() {
-		fail("Not yet implemented");
+		Sequence seq = new Sequence("cats vs dogs");
+		seq.set();
+
+		List<String> tokenized = seq.getTokenizedVersion();
+		String[] expected = {"cats", "vs", "dogs"};
+
+		assertArrayEquals(expected, tokenized.toArray(new String[tokenized.size()]));
+
 	}
 
 	@Test
 	public void testHasReplacedComparators() {
-		fail("Not yet implemented");
+		Sequence seq = new Sequence("cats vs dogs");
+		seq.set();
+		seq.replaceComparators(testPairCatsDogs);
+		assertTrue(seq.hasReplacedComparators());
+
+		seq = new Sequence("cats vs dogs");
+		seq.set();
+		seq.replaceComparators(testPairCatsCats);
+		assertFalse(seq.hasReplacedComparators());
 	}
 
 	@Test
 	public void testIsGeneralized() {
-		fail("Not yet implemented");
+		SequentialPattern pat = new GeneralizedSequence("cat vs dog");
+
+		assertTrue(pat.isGeneralized());
+		assertFalse(pat.isSpecialized());
+		assertFalse(pat.isLexical());
 	}
 
 	@Test
 	public void testIsLexical() {
-		fail("Not yet implemented");
+		SequentialPattern pat = new LexicalSequence("cat vs dog");
+
+		assertTrue(pat.isLexical());
+		assertFalse(pat.isSpecialized());
+		assertFalse(pat.isGeneralized());
 	}
 
 	@Test
 	public void testIsSpecialized() {
-		fail("Not yet implemented");
+		SequentialPattern pat = new SpecializedSequence("cat vs dog");
+
+		assertTrue(pat.isSpecialized());
+		assertFalse(pat.isGeneralized());
+		assertFalse(pat.isLexical());
 	}
 
 	@Test
@@ -113,7 +216,6 @@ public class SequenceTest {
 		assertTrue(seq4.matches(pattern6));
 
 		SequentialPattern pattern7 = new SpecializedSequence("Is there really/RB a/DT fight of $c/NN vs/CC $c/NN?/. #end");
-		System.out.println(pattern7.getTokenizedVersion());
 		assertTrue(seq4.matches(pattern7));
 
 	}
@@ -191,27 +293,99 @@ public class SequenceTest {
 
 	@Test
 	public void testReplaceComparators() {
-		fail("Not yet implemented");
+		Sequence seq = new Sequence("cats vs dogs");
+		seq.set();
+		seq.replaceComparators(testPairCatsDogs);
+		List<String> s = seq.getReplacedComparatorSequence();
+		String expected = "[#start $c vs $c #end]";
+		assertEquals(s.toString(), expected);
+
+		seq = new Sequence("cats vs dogs");
+		seq.set();
+		seq.replaceComparators(testPairPikachuBulbasaur);
+		s = seq.getReplacedComparatorSequence();
+		expected = "[#start cats vs dogs #end]";
+		assertNull(s);
+		//assertEquals(s.toString(), expected);
+
+		seq = new Sequence("cats vs dogs");
+		seq.set();
+		seq.replaceComparators(testPairCatsCats);
+		s = seq.getReplacedComparatorSequence();
+
+		assertNull(s);
+
+		seq = new Sequence("cats vs dogs");
+		seq.set();
+		seq.replaceComparators(testPairCatsDogs);
+		String s0 = seq.getReplacedComparatorText();
+		expected = "#start $c vs $c #end";
+		assertEquals(s0, expected);
+
+		seq = new Sequence("cats vs dogs");
+		seq.set();
+		seq.replaceComparators(testPairPikachuBulbasaur);
+		s0 = seq.getReplacedComparatorText();
+
+		assertNull(s0);
+
+		seq = new Sequence("cats vs dogs");
+		seq.set();
+		seq.replaceComparators(testPairCatsCats);
+		s0 = seq.getReplacedComparatorText();
+		assertNull(s0);
+
 	}
 
 	@Test
 	public void testSequence() {
-		fail("Not yet implemented");
+		Sequence seq = new Sequence("cat vs dog");
+
+		assertNotNull(seq);
+		assertNotNull(seq.text());
+		assertEquals("cat vs dog", seq.text());
+
+		assertNotNull(seq.getTokenizedVersion());
 	}
 
 	@Test
 	public void testSet() {
-		fail("Not yet implemented");
+		Sequence seq = new Sequence("cat vs dog");
+		seq.set();
+		List<List<String>> tokens = seq.getTokens();
+		assertEquals("[[#start, cat, vs, dog, #end]]", tokens.toString());
+
+		String toString = seq.toString();
+		assertEquals("#start cat vs dog #end", toString);
+
+		List<String> sequence = seq.getSequence();
+		assertEquals("[#start cat vs dog #end]", sequence.toString());
+
+		List<List<CompTaggedWord>> list = seq.getTaggedWords();
+		String expected = "[[#start/#, cat/NN, vs/CC, dog/NN, #end/#]]";
+		assertEquals(list.toString(), expected);
+
 	}
 
 	@Test
 	public void testSetTaggedWords() {
-		fail("Not yet implemented");
+		Sequence seq = new Sequence("cat vs dog");
+		seq.set();
+		List<List<CompTaggedWord>> list = seq.getTaggedWords();
+		list.get(0).add(new CompTaggedWord(new TaggedWord("test")));
+		seq.setTaggedWords(list);
+
+		seq = new Sequence("cat vs dog");
+		seq.set();
+
+		assertFalse(list.equals(seq.getTaggedWords()));
 	}
 
 	@Test
 	public void testText() {
-		fail("Not yet implemented");
+		Sequence seq = new Sequence("cat vs dog");
+
+		assertEquals("cat vs dog", seq.text());
 	}
 
 	@Test
