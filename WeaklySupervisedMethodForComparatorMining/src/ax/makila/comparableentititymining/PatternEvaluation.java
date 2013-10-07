@@ -20,7 +20,7 @@ public class PatternEvaluation {
 	/**
 	 * Threshold value for the reliability score of a pattern.
 	 */
-	public static final double gamma = 0.4;
+	public static final double gamma = 0.8;
 	/**
 	 * Used as interpolating variable when calculating reliability score.
 	 */
@@ -28,7 +28,7 @@ public class PatternEvaluation {
 	/**
 	 * Used as a threshold for the support of likely reliable comparator pairs.
 	 */
-	public static final double alpha = 0.0;
+	public static final double alpha = 3.0;
 
 	/**
 	 * Constructor.
@@ -154,13 +154,13 @@ public class PatternEvaluation {
 				System.out.print(percent + "% ");
 			}
 			counter++;
-			int rand = 1 + (int)(Math.random() * ((Math.min(1000, questionSet.size()) - 1) + 1));
-			for(int i = 0; i < questionSet.size(); i += rand) {
-				if(rand > questionSet.size()) {
+			//int rand = 1 + (int)(Math.random() * ((Math.min(100, questionSet.size()) - 1) + 1));
+			for(int i = 0; i < questionSet.size(); i++) {
+				/*if(rand > questionSet.size()) {
 					break;
-				}
+				}*/
 				Sequence q = questionSet.get(i);
-				rand = 1 + (int)(Math.random() * ((Math.min(1000, questionSet.size()) - 1) + 1));
+				//rand = 1 + (int)(Math.random() * ((Math.min(1000, questionSet.size()) - 1) + 1));
 				List<Pair<CompTaggedWord, CompTaggedWord>> pairs = q.getPairs(seq);
 				if(pairs != null) {
 					for(Pair<CompTaggedWord, CompTaggedWord> pair : pairs) {

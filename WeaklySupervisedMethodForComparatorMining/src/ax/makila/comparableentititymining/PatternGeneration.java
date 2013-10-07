@@ -129,7 +129,8 @@ public class PatternGeneration {
 						tree.put(internal.get(i), index);
 					}
 					catch(IllegalArgumentException e) {
-						System.out.println(internal.get(i));
+						System.err.println(internal.get(i));
+						e.printStackTrace();
 						System.exit(0);
 					}
 					index++;
@@ -286,12 +287,17 @@ public class PatternGeneration {
 		t = new Timing();
 		t.startDoing("Calculating reliability");
 		double total = allPatterns.size();
+		if(total == 1) {
+			total = 2;
+		}
 		int steps = (int) total/10;
-		boolean is25 = false;
-		long min15 = 900000;
-		long min25 = 1500000;
+		if(steps == 0) {
+			steps = 1;
+		}
+		boolean is90 = false;
+		long min60 = 3600000;
+		long min90 = 5400000;
 		for(int counter = 0; counter < total; counter++) {
-
 			if(counter % steps == 0 || counter == total - 1) {
 				int percent = (int) (counter/(total-1) *100);
 				System.out.print(percent + "% ");
@@ -299,7 +305,7 @@ public class PatternGeneration {
 			long elapsed = t.report();
 
 			//if more than 15 minutes has elapsed since starting the timer
-			if(elapsed > min15 && !is25) {
+			if(elapsed > min60 && !is90) {
 				int rand = randomSampling(1, 100);
 				if(counter + rand >= total) {
 					counter = (int) total - 2;
@@ -309,7 +315,7 @@ public class PatternGeneration {
 				}
 			}
 			//if more than 25 minutes has elapsed since starting the timer
-			if(elapsed > min25) {
+			if(elapsed > min90) {
 				int rand = randomSampling(1, 1000);
 				if(counter + rand >= total) {
 					counter = (int) total - 1;
@@ -317,7 +323,7 @@ public class PatternGeneration {
 				else {
 					counter += rand;
 				}
-				is25 = true;
+				is90 = true;
 			}
 
 			if(eval.isReliable(counter)) {
