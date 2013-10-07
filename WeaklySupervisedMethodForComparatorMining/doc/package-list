@@ -1,3 +1,5 @@
-com.patternextraction
-com.suffixtree
-com.taggers
+ax.makila.comparableentititymining
+ax.makila.comparableentititymining.postagger
+ax.makila.comparableentititymining.sequentialpatterns
+ax.makila.comparableentititymining.sequentialpatterns.patterns
+ax.makila.comparableentititymining.test
