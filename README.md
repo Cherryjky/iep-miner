@@ -23,9 +23,9 @@ I'm sure that there might be more deviations than this, but because of the very 
 ##Evaluation
 To evaluate the performance of my implementation I manually labeled a random 100 questions from each Yahoo Answers category except the Yahoo Products category. This gave me a total of 2500 questions of which 1037 questions where comparative. For the comparative questions I also tagged the comparative pairs for each sentence. The dataset used for testing contained 10,000 questions including the 2500 tagged questions. I measured the precision, recall and f-score of comparative question identification and I got the following results:
 
-* Precision: 0.888
-* Recall: 0.054
-* F-score: 0.101
+* Precision: 0.439
+* Recall: 0.998
+* F-score: 0.610
 
 which is very much worse than the results I should have been getting according to the paper (f-score of 0.817). 
 
